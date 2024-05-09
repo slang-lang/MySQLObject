@@ -6,7 +6,6 @@ class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
 {
 #MEMBER_DECLARATION#
 
-<<<<<<< Updated upstream
 	public function __construct( $databaseHandle, $query = "" ) {
 		//echo 'The class "' . __CLASS__ . '" was initiated!';
 
@@ -41,10 +40,6 @@ class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
 
 	public function toString() {
 		print_r( get_object_vars( $this ) );
-	}
-
-	public function update()  {
-#MEMBER_UPDATE#
 	}
 
 	private $DB;

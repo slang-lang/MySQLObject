@@ -22,7 +22,6 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
 
     public function insert() {
         $query = "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
-        //echo "$query";
 
         $result = mysqli_query( $this->DB, $query );
 
