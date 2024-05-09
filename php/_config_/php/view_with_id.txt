@@ -16,12 +16,6 @@ class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
         }
     }
 
-    public function __construct( $databaseHandle, $result ) {
-        $this->DB = $databaseHandle;
-
-        loadByResult( $result );
-    }
-
     public function __destruct() {
         //echo 'The class "' . __CLASS__ . '" was destroyed!';
     }
@@ -30,6 +24,7 @@ class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
         //echo "$query";
 
         $result = mysqli_query( $this->DB, $query );
+
         if ( !($row = $result->fetch_assoc()) ) {
             throw new Exception( "no result found" );
         }
@@ -39,7 +34,6 @@ class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
 
     public function loadByPrimaryKey( $#PRIMARY_KEY_NAME# ) {
         $query = "SELECT * FROM #ENTITY_NAME# WHERE #PRIMARY_KEY_NAME# = '" . $#PRIMARY_KEY_NAME# . "'";
-        //echo "Query <$query>";
 
         $result = mysqli_query( $this->DB, $query );
 
@@ -58,10 +52,6 @@ class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
 
     public function toString() {
         print_r( get_object_vars( $this ) );
-    }
-
-    public function update()  {
-#MEMBER_UPDATE#
     }
 
     private $DB;

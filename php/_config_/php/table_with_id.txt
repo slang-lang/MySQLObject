@@ -16,12 +16,6 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
         }
     }
 
-    public function __construct( $databaseHandle, $result ) {
-        $this->DB = $databaseHandle;
-
-        loadByResult( $result );
-    }
-
     public function __destruct() {
         //echo 'The class "' . __CLASS__ . '" was destroyed!';
     }
@@ -85,7 +79,7 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
         print_r( get_object_vars( $this ) );
     }
 
-    public function update( $reloadAfterUpdate = false ) modify throws {
+    public function update( $reloadAfterUpdate = false ) {
         $query = "UPDATE #ENTITY_NAME# SET #MEMBER_PAIR_WITHOUT_PRIMARY# WHERE #PRIMARY_KEY_NAME# = '" + $#PRIMARY_KEY_NAME_PRETTY# + "'";
 
         $error = mysql_query( $this->DB, $query );
@@ -96,10 +90,6 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
         if ( $reloadAfterUpdate ) {
             $this->loadByPrimaryKey( $#PRIMARY_KEY_NAME_PRETTY# );
         }
-    }
-
-    public function toString() {
-        print_r( get_object_vars( $this ) );
     }
 
     private function getLastInsertId() {
