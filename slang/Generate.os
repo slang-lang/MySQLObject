@@ -58,6 +58,10 @@ private string processParameters( ParameterHandler params ) modify {
 		Config.Host = params[ "host" ].Value;
 		params.remove( "host" );
 	}
+	if ( params.contains( "help" ) ) {
+		printUsage();
+		exit( 0 );
+	}
 	if ( params.contains( "output" ) ) {
 		Config.Output = params[ "output" ].Value;
 		params.remove( "output" );

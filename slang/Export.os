@@ -54,6 +54,10 @@ private string processParameters( ParameterHandler params ) modify {
 		Config.Database = params[ "database" ].Value;
 		params.remove( "database" );
 	}
+	if ( params.contains( "help" ) ) {
+		printUsage();
+		exit( 0 );
+	}
 	if ( params.contains( "host" ) ) {
 		Config.Host = params[ "host" ].Value;
 		params.remove( "host" );
