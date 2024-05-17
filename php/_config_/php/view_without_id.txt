@@ -6,43 +6,39 @@ class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
 {
 #MEMBER_DECLARATION#
 
-	public function __construct( $databaseHandle, $query = "" ) {
-		//echo 'The class "' . __CLASS__ . '" was initiated!';
+    public function __construct( $databaseHandle, $query = "" ) {
+        $this->DB = $databaseHandle;
 
-		$this->DB = $databaseHandle;
+        if ( $query ) {
+            $this->loadByQuery( $query );
+        }
+    }
 
-		if ( $query ) {
-			$this->loadByQuery( $query );
-		}
-	}
+    public function __destruct() {
+        // nothing to do here
+    }
 
-	public function __destruct() {
-		//echo 'The class "' . __CLASS__ . '" was destroyed!';
-	}
+    public function loadByQuery( $query ) {
+        $result = mysqli_query( $this->DB, $query );
 
-	public function loadByQuery( $query ) {
-		//echo "$query";
-
-		$result = mysqli_query( $this->DB, $query );
-
-		if ( !($row = $result->fetch_assoc()) ) {
-			throw new Exception( "no result found" );
-		}
+        if ( !($row = $result->fetch_assoc()) ) {
+            throw new Exception( "no result found" );
+        }
 
 #MEMBER_LOAD#
-	}
+    }
 
-	public function loadByResult( $result )  {
-		$row = $result->fetch_assoc();
+    public function loadByResult( $result )  {
+        $row = $result->fetch_assoc();
 
 #MEMBER_LOAD#
-	}
+    }
 
-	public function toString() {
-		print_r( get_object_vars( $this ) );
-	}
+    public function toString() {
+        print_r( get_object_vars( $this ) );
+    }
 
-	private $DB;
+    private $DB;
 }
 
 ?>

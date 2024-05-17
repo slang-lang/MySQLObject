@@ -7,8 +7,6 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
 #MEMBER_DECLARATION#
 
     public function __construct( $databaseHandle, $query = "" ) {
-        //echo 'The class "' . __CLASS__ . '" was initiated!';
-
         $this->DB = $databaseHandle;
 
         if ( $query ) {
@@ -17,7 +15,7 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
     }
 
     public function __destruct() {
-        //echo 'The class "' . __CLASS__ . '" was destroyed!';
+        // nothing to do here
     }
 
     public function insert() {
@@ -32,7 +30,6 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
 
     public function insertOrUpdate() {
         $query = "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# ) ON DUPLICATE KEY UPDATE #MEMBER_PAIR_WITHOUT_PRIMARY#";
-        //echo "$query";
 
         $result = mysqli_query( $this->DB, $query );
 
@@ -42,8 +39,6 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
     }
 
     public function loadByQuery( $query ) {
-        //echo "$query";
-
         $result = mysqli_query( $this->DB, $query );
 
         if ( !($row = $result->fetch_assoc()) ) {
