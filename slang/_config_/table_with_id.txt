@@ -38,7 +38,28 @@ public object #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# {
         }
 
         if ( reloadAfterInsert ) {
-            loadByPrimaryKey( getLastInsertId() );
+            if ( !#PRIMARY_KEY_NAME_PRETTY# ) {
+                #PRIMARY_KEY_NAME_PRETTY# = getLastInsertId();
+            }
+
+            loadByPrimaryKey( #PRIMARY_KEY_NAME_PRETTY# );
+        }
+    }
+
+    public void insertIgnore( bool reloadAfterInsert = false ) modify throws {
+        var query = "INSERT IGNORE INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
+
+        var error = mysql_query( DB, query );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        if ( reloadAfterInsert ) {
+            if ( !#PRIMARY_KEY_NAME_PRETTY# ) {
+                #PRIMARY_KEY_NAME_PRETTY# = getLastInsertId();
+            }
+
+            loadByPrimaryKey( #PRIMARY_KEY_NAME_PRETTY# );
         }
     }
 
