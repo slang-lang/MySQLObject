@@ -28,6 +28,17 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
         }
     }
 
+    public function insertIgnore() {
+        $query = "INSERT IGNORE INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
+
+        $result = mysqli_query( $this->DB, $query );
+
+        if ( mysqli_error( $this->DB ) ) {
+            throw new Exception( mysqli_error( $this->DB ) );
+        }
+    }
+
+
     public function insertOrUpdate() {
         $query = "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# ) ON DUPLICATE KEY UPDATE #MEMBER_PAIR_WITHOUT_PRIMARY#";
 
