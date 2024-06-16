@@ -28,11 +28,15 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
         }
 
         if ( $reloadAfterInsert ) {
-            $this->loadByPrimaryKey( getLastInsertId() );
+            if ( !$this->#PRIMARY_KEY_NAME_PRETTY# ) {
+                $this->#PRIMARY_KEY_NAME_PRETTY# = $this->getLastInsertId();
+            }
+
+            $this->loadByPrimaryKey( $this->#PRIMARY_KEY_NAME_PRETTY# );
         }
     }
 
-    public function insertIgnore() {
+    public function insertIgnore( $reloadAfterInsert = false ) {
         $query = "INSERT IGNORE INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
 
         $result = mysqli_query( $this->DB, $query );
@@ -40,16 +44,32 @@ class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
         if ( mysqli_error( $this->DB ) ) {
             throw new Exception( mysqli_error( $this->DB ) );
         }
+
+        if ( $reloadAfterInsert ) {
+            if ( !$this->#PRIMARY_KEY_NAME_PRETTY# ) {
+                $this->#PRIMARY_KEY_NAME_PRETTY# = $this->getLastInsertId();
+            }
+
+            $this->loadByPrimaryKey( $this->#PRIMARY_KEY_NAME_PRETTY# );
+        }
     }
 
 
-    public function insertOrUpdate() {
+    public function insertOrUpdate( $reloadAfterInsert = false ) {
         $query = "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# ) ON DUPLICATE KEY UPDATE #MEMBER_PAIR_WITHOUT_PRIMARY#";
 
         $result = mysqli_query( $this->DB, $query );
 
         if ( mysqli_error( $this->DB ) ) {
             throw new Exception( mysqli_error( $this->DB ) );
+        }
+
+        if ( $reloadAfterInsert ) {
+            if ( !$this->#PRIMARY_KEY_NAME_PRETTY# ) {
+                $this->#PRIMARY_KEY_NAME_PRETTY# = $this->getLastInsertId();
+            }
+
+            $this->loadByPrimaryKey( $this->#PRIMARY_KEY_NAME_PRETTY# );
         }
     }
 
