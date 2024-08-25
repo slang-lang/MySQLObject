@@ -19,11 +19,11 @@ public object EntityType {
 	public string Type const;
 
 	public void Constructor( string name, string type, bool hasLookup, Vector<FieldEntry> fields, Vector<TokenEntity> tokens ) {
-		Fields = fields;
+		Fields    = fields;
 		HasLookup = hasLookup;
-		Name = name;
-		Tokens = tokens;
-		Type = type;
+		Name      = name;
+		Tokens    = tokens;
+		Type      = type;
 	}
 
 	public string =operator( string ) const {
@@ -34,9 +34,9 @@ public object EntityType {
 public object EntityLookup {
 	public void Constructor( int databaseHandle, string databaseName ) {
 		mDatabaseHandle = databaseHandle;
-		mDatabaseName = databaseName;
-		mFieldLookup = new FieldLookup();
-		mTokenLookup = new TokenLookup();
+		mDatabaseName   = databaseName;
+		mFieldLookup    = new FieldLookup();
+		mTokenLookup    = new TokenLookup();
 	}
 
 	public void fetchEntities() modify {
@@ -54,11 +54,11 @@ public object EntityLookup {
 		return mViews[ entityName ];
 	}
 
-	public Vector<string> getFunctions() const {
+	public Map<string, EntityType> getFunctions() const {
 		return mFunctions;
 	}
 
-	public Vector<string> getProcedures() const {
+	public Map<string, EntityType> getProcedures() const {
 		return mProcedures;
 	}
 
@@ -108,7 +108,7 @@ public object EntityLookup {
 		return entities;
 	}
 
-	private Vector<string> fetchFunctions() const throws {
+	private Map<string, EntityType> fetchFunctions() const throws {
 		var query = "SHOW FUNCTION STATUS WHERE DB = '" + mDatabaseName + "'";
 
 		var error = mysql_query( mDatabaseHandle, query );
@@ -116,19 +116,21 @@ public object EntityLookup {
 			throw mysql_error( mDatabaseHandle );
 		}
 
-		var entities = new Vector<string>();
+		var entities = new Map<string, EntityType>();
 
 		var result = mysql_store_result( mDatabaseHandle );
 		while ( mysql_fetch_row( result ) ) {
-			var name = mysql_get_field_value( result, 1 );
+			var entityName = mysql_get_field_value( result, 1 );
 
-			entities.push_back( name );
+			var fields = mFieldLookup.getParameters( mDatabaseHandle, entityName );
+
+			entities.insert( entityName, new EntityType( entityName, "PROCEDURE", false, fields, new Vector<TokenEntity>() ) );
 		}
 
 		return entities;
 	}
 
-	private Vector<string> fetchProcedures() const throws {
+	private Map<string, EntityType> fetchProcedures() const throws {
 		var query = "SHOW PROCEDURE STATUS WHERE DB = '" + mDatabaseName + "'";
 
 		var error = mysql_query( mDatabaseHandle, query );
@@ -136,13 +138,15 @@ public object EntityLookup {
 			throw mysql_error( mDatabaseHandle );
 		}
 
-		var entities = new Vector<string>();
+		var entities = new Map<string, EntityType>();
 
 		var result = mysql_store_result( mDatabaseHandle );
 		while ( mysql_fetch_row( result ) ) {
-			var name = mysql_get_field_value( result, 1 );
+			var entityName = mysql_get_field_value( result, 1 );
 
-			entities.push_back( name );
+			var fields = mFieldLookup.getParameters( mDatabaseHandle, entityName );
+
+			entities.insert( entityName, new EntityType( entityName, "PROCEDURE", false, fields, new Vector<TokenEntity>() ) );
 		}
 
 		return entities;
@@ -151,8 +155,8 @@ public object EntityLookup {
 	private int mDatabaseHandle;
 	private string mDatabaseName;
 	private FieldLookup mFieldLookup;
-	private Vector<string> mFunctions;
-	private Vector<string> mProcedures;
+	private Map<string, EntityType> mFunctions;
+	private Map<string, EntityType> mProcedures;
 	private Map<string, EntityType> mTables;
 	private TokenLookup mTokenLookup;
 	private Map<string, EntityType> mViews;

@@ -1,0 +1,23 @@
+
+public void #ENTITY_NAME_PRETTY#( int DB, #PARAMETER_DECLARATION#, bool trace = false ) modify throws {
+    var query = "CALL #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# ); ";
+
+    var startTime = time();
+
+    try {
+        var error = mysql_query( DB, query );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+    }
+    catch ( string e ) {
+        print( "Exception: " + e );
+    }
+
+    if ( trace ) {
+        var duration = time() - startTime;
+
+        print( "Executing <" + query + "> in " + duration + "s" );
+    }
+}
+

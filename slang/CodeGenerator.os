@@ -25,6 +25,12 @@ public object CodeGenerator {
         // prepare output folders for lookups, tables and views
         prepareFolders();
 
+        // generate files for all stored functions
+        generateFunctions();
+
+        // generate files for all stored procedures
+        generateProcedures();
+
         // generate files for all tables
         generateTables();
 
@@ -51,6 +57,79 @@ public object CodeGenerator {
         mysql_close( mDatabaseHandle );
     }
 
+    private void generateFunctions() const {
+        var entities = mEntityLookup.getFunctions();
+
+        // function template
+        var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Function.txt" ).getText() );
+
+        var libraryImports = LINEBREAK;
+        libraryImports += "// import all library files" + LINEBREAK;
+
+        int count;
+        foreach ( Pair<string, EntityType> pair : entities ) {
+            var entity = pair.second;
+
+            var template = copy baseTemplate;
+            template.ReplaceAll( TEMPLATE_ENTITY_NAME_PRETTY,    Utils.prettify( entity.Name ) );                                    // entity name
+            template.ReplaceAll( TEMPLATE_PARAMETER_DECLARATION, generateParameterDeclaration( entity.Name, entity.Fields, true ) ); // parameter declaration list
+            template.ReplaceAll( TEMPLATE_PARAMETER_USAGE,       generateParameterUsage( entity.Name, entity.Fields, true ) );       // parameter usage list
+            template.ReplaceAll( TEMPLATE_RETURN_TYPE,           generateReturnType( entity.Fields ) );                              // return type
+
+            var outFile = new System.IO.File( Config.Output + "/Functions/" + Utils.prettify( entity.Name ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            outFile.write( cast<string>( template ) );
+            outFile.close();
+
+            libraryImports += "import " + Utils.prettify( entity.Name ) + ";" + LINEBREAK;
+
+            count++;
+        }
+
+        libraryImports += LINEBREAK;
+
+        var allFile = new System.IO.File( Config.Output + "/Procedures/All.os", System.IO.File.AccessMode.WriteOnly );
+        allFile.write( libraryImports );
+        allFile.close();
+
+        print( "" + count + " function objects generated." );
+    }
+
+    private void generateProcedures() const {
+        var entities = mEntityLookup.getProcedures();
+
+        // procedure template
+        var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Procedure.txt" ).getText() );
+
+        var libraryImports = LINEBREAK;
+        libraryImports += "// import all library files" + LINEBREAK;
+
+        int count;
+        foreach ( Pair<string, EntityType> pair : entities ) {
+            var entity = pair.second;
+
+            var template = copy baseTemplate;
+            template.ReplaceAll( TEMPLATE_ENTITY_NAME_PRETTY,    Utils.prettify( entity.Name ) );                              // entity name
+            template.ReplaceAll( TEMPLATE_PARAMETER_DECLARATION, generateParameterDeclaration( entity.Name, entity.Fields ) ); // parameter declaration list
+            template.ReplaceAll( TEMPLATE_PARAMETER_USAGE,       generateParameterUsage( entity.Name, entity.Fields ) );       // parameter usage list
+
+            var outFile = new System.IO.File( Config.Output + "/Procedures/" + Utils.prettify( entity.Name ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            outFile.write( cast<string>( template ) );
+            outFile.close();
+
+            libraryImports += "import " + Utils.prettify( entity.Name ) + ";" + LINEBREAK;
+
+            count++;
+        }
+
+        libraryImports += LINEBREAK;
+
+        var allFile = new System.IO.File( Config.Output + "/Procedures/All.os", System.IO.File.AccessMode.WriteOnly );
+        allFile.write( libraryImports );
+        allFile.close();
+
+        print( "" + count + " procedure objects generated." );
+    }
+
     private string generateLoaders( string entityName, Vector<FieldEntry> fields const, bool usePrimaryKey = true ) const {
         string result;
 
@@ -71,6 +150,8 @@ public object CodeGenerator {
 
     private void generateLookups() modify throws {
         var entities = mEntityLookup.getTables();
+
+        // key lookup template
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Lookup.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
@@ -211,6 +292,58 @@ public object CodeGenerator {
         }
 
         return result;
+    }
+
+    private string generateParameterDeclaration( string entityName, Vector<FieldEntry> fields const, bool skipFirst = false ) const {
+        string result;
+
+        foreach ( FieldEntry field : fields ) {
+            if ( !field.PrettyName ) {
+                // this is the return type of a function
+                continue;
+            }
+
+            if ( result ) {
+                result += ", ";
+            }
+
+            result += field.PrettyType + " " + field.PrettyName;
+        }
+
+        return result;
+    }
+
+    private string generateParameterUsage( string entityName, Vector<FieldEntry> fields const, bool skipFirst = false ) const {
+        string result;
+
+        foreach ( FieldEntry field : fields ) {
+            if ( !field.PrettyName ) {
+                // this is the return type of a function
+                continue;
+            }
+
+            if ( result ) {
+                result += ", ";
+            }
+
+            if ( field.RealType == "datetime" || field.RealType == "timestamp" ) {
+                result += "NULLIF('\" + " + field.PrettyName + " + \"', '')";
+            }
+            else {
+                result += "'\" + " + field.PrettyName + " + \"'";
+            }
+        }
+
+        return result;
+    }
+
+    private string generateReturnType( Vector<FieldEntry> fields const ) const throws {
+        foreach ( FieldEntry field : fields ) {
+            // this is the return type of a function
+            return field.PrettyType;
+        }
+
+        throw "invalid return type";
     }
 
     private void generateTables() modify {

@@ -1,0 +1,28 @@
+
+public #RETURN_TYPE# #ENTITY_NAME_PRETTY#( int DB, #PARAMETER_DECLARATION#, bool trace = false ) modify throws {
+    var query = "SELECT #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# ) AS RESULT";
+
+    var startTime = time();
+
+    var error = mysql_query( DB, query );
+    if ( error ) {
+        throw mysql_error( DB );
+    }
+
+    var result = mysql_store_result( DB );
+    if ( !result ) {
+        throw mysql_error( DB );
+    }
+
+    if ( !mysql_fetch_row( result ) ) {
+        throw mysql_error( DB );
+    }
+
+    if ( trace ) {
+        var duration = time() - startTime;
+
+        print( "Executing <" + query + "> in " + duration + "s" );
+    }
+
+    return mysql_get_field_value( result, "RESULT" );
+}
