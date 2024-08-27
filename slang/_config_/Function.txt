@@ -24,5 +24,6 @@ public #RETURN_TYPE# #ENTITY_NAME_PRETTY#( int DB, #PARAMETER_DECLARATION#, bool
         print( "Executing <" + query + "> in " + duration + "s" );
     }
 
-    return mysql_get_field_value( result, "RESULT" );
+    return cast<#RETURN_TYPE#>( mysql_get_field_value( result, "RESULT" ) );
 }
+
