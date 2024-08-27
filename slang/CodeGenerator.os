@@ -87,7 +87,7 @@ public object CodeGenerator {
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Procedures/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Functions/All.os", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
