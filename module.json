@@ -1,8 +1,8 @@
 {
-  "name": "Slang and PHP MySQL entity serializer",
+  "name": "Slang MySQL entity serializer",
   "name_short": "MysqlObject",
-  "version": "2.0.0c",
-  "description": "MysqlObject serializes MySQL and MariaDB entities (tables, views)",
+  "version": "2.0.1",
+  "description": "MysqlObject serializes MySQL and MariaDB entities (tables, views) into Slang objects",
   "dependencies": [
     { "module": "Slang", "version_min": "0.7.3" },
     { "module": "System", "version_min": "0.3.8" },
