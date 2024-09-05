@@ -54,10 +54,6 @@ private string processParameters( ParameterHandler params ) modify {
 		Config.Database = params[ "database" ].Value;
 		params.remove( "database" );
 	}
-	if ( params.contains( "format" ) ) {
-		Config.OutputFormat = params[ "format" ].Value;
-		params.remove( "format" );
-	}
 	if ( params.contains( "host" ) ) {
 		Config.Host = params[ "host" ].Value;
 		params.remove( "host" );
@@ -79,9 +75,6 @@ private string processParameters( ParameterHandler params ) modify {
 		params.remove( "user" );
 	}
 
-	if ( !Config.OutputFormat ) {
-		Config.OutputFormat = "os";
-	}
 	if ( !Config.TargetDirectory ) {
 		Config.TargetDirectory = Config.Database;
 	}

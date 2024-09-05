@@ -30,7 +30,7 @@ public object TemplateLookup implements IIterable {
 	}
 
 	private void process() modify throws {
-		var charIt = new Scanner( CONFIG_DIRECTORY + Config.OutputFormat + "/Templates.txt" ).getIterator();
+		var charIt = new Scanner( CONFIG_DIRECTORY + "/Templates.txt" ).getIterator();
 
 		while ( charIt.hasNext() ) {
 			skipChars( charIt );

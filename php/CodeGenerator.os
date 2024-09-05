@@ -71,7 +71,7 @@ public object CodeGenerator {
 
     private void generateLookups() modify throws {
         var entities = mEntityLookup.getTables();
-        var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "/" + Config.OutputFormat + "/Lookup.txt" ).getText() );
+        var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "/" + "/Lookup.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
         libraryImports += "// import all library files" + LINEBREAK;
@@ -87,7 +87,7 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_ENTITY_NAME_PRETTY, Utils.prettify( entity.first ) );        // entity name
             template.ReplaceAll( TEMPLATE_ENUM_DECLARATION, generateEnumMembers( entity.second ) );        // enum declaration list
 
-            var outFile = new System.IO.File( Config.TargetDirectory + "/Lookups/" + Utils.prettify( entity.first ) + "." + Config.OutputFormat, System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.TargetDirectory + "/Lookups/" + Utils.prettify( entity.first ) + ".php", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
@@ -98,7 +98,7 @@ public object CodeGenerator {
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.TargetDirectory + "/Lookups/All." + Config.OutputFormat, System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.TargetDirectory + "/Lookups/All.php", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -106,11 +106,11 @@ public object CodeGenerator {
 
         if ( count > 0 ) {
             // prepare key lookup object
-            var keyLookupTemplate = new String( new Scanner( CONFIG_DIRECTORY + "/" + Config.OutputFormat + "/KeyLookup.txt" ).getText() );
+            var keyLookupTemplate = new String( new Scanner( CONFIG_DIRECTORY + "/KeyLookup.txt" ).getText() );
 
             replaceUserTemplates( keyLookupTemplate );
 
-            var outFile = new System.IO.File( Config.TargetDirectory + "/KeyLookup." + Config.OutputFormat, System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.TargetDirectory + "/KeyLookup.php", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( keyLookupTemplate ) );
             outFile.close();
         }
@@ -216,8 +216,8 @@ public object CodeGenerator {
     private void generateTables() modify {
         var entities = mEntityLookup.getTables();
 
-        var baseTemplateWithId    = new String( new Scanner( CONFIG_DIRECTORY + "/" + Config.OutputFormat + "/table_with_id.txt" ).getText() );
-        var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "/" + Config.OutputFormat + "/table_without_id.txt" ).getText() );
+        var baseTemplateWithId    = new String( new Scanner( CONFIG_DIRECTORY + "/table_with_id.txt" ).getText() );
+        var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "/table_without_id.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
         libraryImports += "// import all library files" + LINEBREAK;
@@ -238,7 +238,7 @@ public object CodeGenerator {
             replaceSpecialTemplates( template, entity.second );
             replaceUserTemplates( template );
     
-            var outFile = new System.IO.File( Config.TargetDirectory + "/Tables/" + Utils.prettify( entity.first ) + "." + Config.OutputFormat, System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.TargetDirectory + "/Tables/" + Utils.prettify( entity.first ) + ".php", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
@@ -249,7 +249,7 @@ public object CodeGenerator {
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.TargetDirectory + "/Tables/All." + Config.OutputFormat, System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.TargetDirectory + "/Tables/All.php", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -263,8 +263,8 @@ public object CodeGenerator {
     private void generateViews() modify {
         var entities = mEntityLookup.getViews();
 
-        var baseTemplateWithId    = new String( new Scanner( CONFIG_DIRECTORY + "/" + Config.OutputFormat + "/view_with_id.txt" ).getText() );
-        var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "/" + Config.OutputFormat + "/view_without_id.txt" ).getText() );
+        var baseTemplateWithId    = new String( new Scanner( CONFIG_DIRECTORY + "/view_with_id.txt" ).getText() );
+        var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "/view_without_id.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
         libraryImports += "// import all library files" + LINEBREAK;
@@ -285,7 +285,7 @@ public object CodeGenerator {
             replaceSpecialTemplates( template, entity.second );
             replaceUserTemplates( template );
 
-            var outFile = new System.IO.File( Config.TargetDirectory + "/Views/" + Utils.prettify( entity.first ) + "." + Config.OutputFormat, System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.TargetDirectory + "/Views/" + Utils.prettify( entity.first ) + ".php", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
@@ -296,7 +296,7 @@ public object CodeGenerator {
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.TargetDirectory + "/Views/All." + Config.OutputFormat, System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.TargetDirectory + "/Views/All.php", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 

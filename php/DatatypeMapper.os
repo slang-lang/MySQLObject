@@ -35,7 +35,7 @@ public object DatatypeMapper {
 	}
 
 	private void load() modify {
-		var charIt = new Scanner( CONFIG_DIRECTORY + Config.OutputFormat + "/DataTypes.txt" ).getIterator();
+		var charIt = new Scanner( CONFIG_DIRECTORY + "/DataTypes.txt" ).getIterator();
 
 		string c;
 		string text;
