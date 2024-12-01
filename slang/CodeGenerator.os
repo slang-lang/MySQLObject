@@ -59,6 +59,9 @@ public object CodeGenerator {
 
     private void generateFunctions() const {
         var entities = mEntityLookup.getFunctions();
+        if ( entities.empty() ) {
+            return;
+        }
 
         // function template
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Function.txt" ).getText() );
@@ -96,6 +99,9 @@ public object CodeGenerator {
 
     private void generateProcedures() const {
         var entities = mEntityLookup.getProcedures();
+        if ( entities.empty() ) {
+            return;
+        }
 
         // procedure template
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Procedure.txt" ).getText() );
@@ -150,6 +156,9 @@ public object CodeGenerator {
 
     private void generateLookups() modify throws {
         var entities = mEntityLookup.getTables();
+        if ( entities.empty() ) {
+            return;
+        }
 
         // key lookup template
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Lookup.txt" ).getText() );
@@ -348,6 +357,9 @@ public object CodeGenerator {
 
     private void generateTables() modify {
         var entities = mEntityLookup.getTables();
+        if ( entities.empty() ) {
+            return;
+        }
 
         var baseTemplateWithId    = new String( new Scanner( CONFIG_DIRECTORY + "table_with_id.txt" ).getText() );
         var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "table_without_id.txt" ).getText() );
@@ -395,6 +407,9 @@ public object CodeGenerator {
 
     private void generateViews() modify {
         var entities = mEntityLookup.getViews();
+        if ( entities.empty() ) {
+            return;
+        }
 
         var baseTemplateWithId    = new String( new Scanner( CONFIG_DIRECTORY + "view_with_id.txt" ).getText() );
         var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "view_without_id.txt" ).getText() );
