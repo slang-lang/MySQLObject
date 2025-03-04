@@ -9,6 +9,13 @@ public void #ENTITY_NAME_PRETTY#( int DB, #PARAMETER_DECLARATION#, bool trace = 
         if ( error ) {
             throw mysql_error( DB );
         }
+
+        var result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        mysql_free_result( result );
     }
     catch ( string e ) {
         print( "Exception: " + e );
