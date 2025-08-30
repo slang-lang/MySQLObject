@@ -1,5 +1,5 @@
 
-public void #ENTITY_NAME_PRETTY#( int DB, #PARAMETER_DECLARATION#, bool trace = false ) modify throws {
+public void #ENTITY_NAME_PRETTY#( int DB, #PARAMETER_DECLARATION# bool trace = false ) modify throws {
     var query = "CALL #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# ); ";
 
     var startTime = time();
