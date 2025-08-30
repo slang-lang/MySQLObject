@@ -1,12 +1,9 @@
 
-/*
 public enum #ENTITY_NAME_PRETTY# {
 #ENUM_DECLARATION#
 }
-*/
 
-
-public object #ENTITY_NAME_PRETTY# {
+public object #ENTITY_NAME_PRETTY#Converter {
 #ENUM_MEMBERS#
 
     public static int FromToken( string token ) throws {
