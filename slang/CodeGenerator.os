@@ -367,10 +367,10 @@ public object CodeGenerator {
             }
 
             if ( result ) {
-                result += ", ";
+                result += " ";
             }
 
-            result += field.PrettyType + " " + field.PrettyName;
+            result += field.PrettyType + " " + field.PrettyName + ",";
         }
 
         return result;
