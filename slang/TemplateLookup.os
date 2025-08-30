@@ -41,7 +41,9 @@ public object TemplateLookup implements IIterable {
 
 			var value = parseValue( charIt );
 
-			mTemplates.insert( key, value );
+			if ( key || value ) {
+				mTemplates.insert( key, value );
+			}
 		}
 	}
 
