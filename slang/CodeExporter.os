@@ -51,8 +51,8 @@ public object CodeExporter {
         var entities = mEntityLookup.getFunctions();
 
         int count;
-        foreach ( string entity : entities ) {
-            var query = "SHOW CREATE FUNCTION " + entity;
+        foreach ( Pair<string,EntityType> entity : entities ) {
+            var query = "SHOW CREATE FUNCTION " + entity.first;
 
             var error = mysql_query( mDatabaseHandle, query );
             if ( error ) {
@@ -63,7 +63,7 @@ public object CodeExporter {
             if ( mysql_fetch_row( result ) ) {
                 var content = mysql_get_field_value( result, "Create Function" );
 
-                var outFile = new System.IO.File( Config.Output + "/functions/" + entity + ".sql", System.IO.File.AccessMode.WriteOnly );
+                var outFile = new System.IO.File( Config.Output + "/functions/" + entity.first + ".sql", System.IO.File.AccessMode.WriteOnly );
                 outFile.write( content + ";" );
                 outFile.close();
             }
@@ -78,8 +78,8 @@ public object CodeExporter {
         var entities = mEntityLookup.getProcedures();
 
         int count;
-        foreach ( string entity : entities ) {
-            var query = "SHOW CREATE PROCEDURE " + entity;
+        foreach ( Pair<string, EntityType> entity : entities ) {
+            var query = "SHOW CREATE PROCEDURE " + entity.first;
 
             var error = mysql_query( mDatabaseHandle, query );
             if ( error ) {
@@ -90,7 +90,7 @@ public object CodeExporter {
             if ( mysql_fetch_row( result ) ) {
                 var content = mysql_get_field_value( result, "Create Procedure" );
 
-                var outFile = new System.IO.File( Config.Output + "/procedures/" + entity + ".sql", System.IO.File.AccessMode.WriteOnly );
+                var outFile = new System.IO.File( Config.Output + "/procedures/" + entity.first + ".sql", System.IO.File.AccessMode.WriteOnly );
                 outFile.write( content + ";" );
                 outFile.close();
             }

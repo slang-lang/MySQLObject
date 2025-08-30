@@ -124,7 +124,7 @@ public object EntityLookup {
 
 			var fields = mFieldLookup.getParameters( mDatabaseHandle, entityName );
 
-			entities.insert( entityName, new EntityType( entityName, "PROCEDURE", false, fields, new Vector<TokenEntity>() ) );
+			entities.insert( entityName, new EntityType( entityName, "FUNCTION", false, fields, new Vector<TokenEntity>() ) );
 		}
 
 		return entities;
