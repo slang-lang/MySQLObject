@@ -374,10 +374,10 @@ public object CodeGenerator {
             String template;
 
             if ( entity.second.Fields.indexOf( idField ) >= 0 ) {
-               template = copy baseTemplateWithId;
+                template = copy baseTemplateWithId;
             }
             else {
-               template = copy baseTemplateWithoutId;
+                template = copy baseTemplateWithoutId;
             }
 
             replaceSpecialTemplates( template, entity.second );
