@@ -1,5 +1,24 @@
 
+/*
 public enum #ENTITY_NAME_PRETTY# {
 #ENUM_DECLARATION#
+}
+*/
+
+
+public object #ENTITY_NAME_PRETTY# {
+#ENUM_MEMBERS#
+
+    public static int FromToken( string token ) throws {
+#ENUM_FROM_TOKEN#
+
+        throw "invalid token '" + token + "'";
+    }
+
+    public static string ToToken( int id ) throws {
+#ENUM_TO_TOKEN#
+
+        throw "invalid id " + id;
+    }
 }
 

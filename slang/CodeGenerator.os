@@ -174,8 +174,11 @@ public object CodeGenerator {
 
             var template = copy baseTemplate;
 
-            template.ReplaceAll( TEMPLATE_ENTITY_NAME_PRETTY, Utils.prettify( entity.first ) );        // entity name
-            template.ReplaceAll( TEMPLATE_ENUM_DECLARATION, generateEnumMembers( entity.second ) );        // enum declaration list
+            template.ReplaceAll( TEMPLATE_ENTITY_NAME_PRETTY, Utils.prettify( entity.first ) );             // entity name
+            template.ReplaceAll( TEMPLATE_ENUM_DECLARATION, generateEnumDeclarations( entity.second ) );    // enum declaration list
+            template.ReplaceAll( TEMPLATE_ENUM_MEMBERS, generateEnumMembers( entity.second ) );             // enum member list
+            template.ReplaceAll( TEMPLATE_ENUM_FROM_TOKEN, generateEnumFromToken( entity.second ) );        // enum FromToken
+            template.ReplaceAll( TEMPLATE_ENUM_TO_TOKEN, generateEnumToToken( entity.second ) );            // enum ToToken
 
             var outFile = new System.IO.File( Config.Output + "/Lookups/" + Utils.prettify( entity.first ) + ".os", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
@@ -206,7 +209,7 @@ public object CodeGenerator {
         }
     }
 
-    private string generateEnumMembers( EntityType entity ) {
+    private string generateEnumDeclarations( EntityType entity ) {
         string result;
 
         var tokenIt = entity.Tokens.getIterator();
@@ -220,6 +223,57 @@ public object CodeGenerator {
 
             var t = tokenIt.next();
             result += "    " + t.Token + " = " + t.Id;
+        }
+
+        return result + ";";
+    }
+
+    private string generateEnumFromToken( EntityType entity ) {
+        string result;
+
+        var tokenIt = entity.Tokens.getIterator();
+        while ( tokenIt.hasNext() ) {
+            if ( result ) {
+                result += LINEBREAK;
+            }
+
+            var t = tokenIt.next();
+            result += "        if ( token == \"t.Token\" ) return t.Token;";
+        }
+
+        return result + ";";
+    }
+
+    private string generateEnumMembers( EntityType entity ) {
+        string result;
+
+        var tokenIt = entity.Tokens.getIterator();
+        while ( tokenIt.hasNext() ) {
+            if ( result ) {
+                if ( tokenIt.hasNext() ) {
+                    result += ";";
+                }
+                result += LINEBREAK;
+            }
+
+            var t = tokenIt.next();
+            result += "    public int " + t.Token + " const = " + t.Id;
+        }
+
+        return result + ";";
+    }
+
+    private string generateEnumToToken( EntityType entity ) {
+        string result;
+
+        var tokenIt = entity.Tokens.getIterator();
+        while ( tokenIt.hasNext() ) {
+            if ( result ) {
+                result += LINEBREAK;
+            }
+
+            var t = tokenIt.next();
+            result += "        if ( id == t.Id ) return \"t.Token\";";
         }
 
         return result + ";";
