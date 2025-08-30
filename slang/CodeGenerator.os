@@ -238,10 +238,10 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "        if ( token == \"t.Token\" ) return t.Token;";
+            result += "        if ( token == \"" + t.Token + "\" ) return " + t.Token + ";";
         }
 
-        return result + ";";
+        return result;
     }
 
     private string generateEnumMembers( EntityType entity ) {
@@ -273,10 +273,10 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "        if ( id == t.Id ) return \"t.Token\";";
+            result += "        if ( id == " + t.Token + " ) return \"" + t.Token + "\";";
         }
 
-        return result + ";";
+        return result;
     }
 
     private string generateMemberDecl( string entityName, Vector<FieldEntry> fields const ) const {
