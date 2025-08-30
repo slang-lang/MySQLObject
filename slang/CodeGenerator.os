@@ -177,8 +177,8 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_ENTITY_NAME_PRETTY, Utils.prettify( entity.first ) );             // entity name
             template.ReplaceAll( TEMPLATE_ENUM_DECLARATION, generateEnumDeclarations( entity.second ) );    // enum declaration list
             template.ReplaceAll( TEMPLATE_ENUM_MEMBERS, generateEnumMembers( entity.second ) );             // enum member list
-            template.ReplaceAll( TEMPLATE_ENUM_FROM_TOKEN, generateEnumFromToken( entity.second ) );        // enum FromToken
-            template.ReplaceAll( TEMPLATE_ENUM_TO_TOKEN, generateEnumToToken( entity.second ) );            // enum ToToken
+            template.ReplaceAll( TEMPLATE_ENUM_FROM_TOKEN, generateEnumFromToken( Utils.prettify( entity.first ), entity.second ) );        // enum FromToken
+            template.ReplaceAll( TEMPLATE_ENUM_TO_TOKEN, generateEnumToToken( Utils.prettify( entity.first ), entity.second ) );            // enum ToToken
 
             var outFile = new System.IO.File( Config.Output + "/Lookups/" + Utils.prettify( entity.first ) + ".os", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
@@ -228,7 +228,7 @@ public object CodeGenerator {
         return result + ";";
     }
 
-    private string generateEnumFromToken( EntityType entity ) {
+    private string generateEnumFromToken( string type, EntityType entity ) {
         string result;
 
         var tokenIt = entity.Tokens.getIterator();
@@ -238,7 +238,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "        if ( token == \"" + t.Token + "\" ) return " + t.Token + ";";
+            result += "        if ( token == \"" + t.Token + "\" ) return " + type + "." + t.Token + ";";
         }
 
         return result;
@@ -263,7 +263,7 @@ public object CodeGenerator {
         return result + ";";
     }
 
-    private string generateEnumToToken( EntityType entity ) {
+    private string generateEnumToToken( string type, EntityType entity ) {
         string result;
 
         var tokenIt = entity.Tokens.getIterator();
@@ -273,7 +273,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "        if ( id == " + t.Token + " ) return \"" + t.Token + "\";";
+            result += "        if ( id == " + type + "." + t.Token + " ) return \"" + t.Token + "\";";
         }
 
         return result;
