@@ -1,7 +1,7 @@
 
-public string APP_COPYRIGHT const = "Copyright © 2021-2024 Michael Adelmann";
+public string APP_COPYRIGHT const = "Copyright © 2021-2025 Michael Adelmann";
 public string APP_NAME const = "MysqlObject";
-public string APP_VERSION const = "v2.0.2";
+public string APP_VERSION const = "v2.1.0";
 
 public string CONFIG_DIRECTORY const = "_config_/";
 
