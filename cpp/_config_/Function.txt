@@ -1,4 +1,10 @@
 
+#include <ctime>
+#include <string>
+#include <mariadb/mysql.h>
+
+using string = std::string;
+
 #RETURN_TYPE# #ENTITY_NAME_PRETTY#( int32_t DB, #PARAMETER_DECLARATION# bool trace = false ) {
     auto query = "SELECT #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# ) AS RESULT";
 

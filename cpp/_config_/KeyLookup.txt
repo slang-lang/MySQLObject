@@ -2,10 +2,13 @@
 #include <map>
 #include <string>
 
+using map    = std::map;
+using string = std::string;
+
 class KeyLookup<K, V>
 {
 public:
-    KeyLookup<K, V>( int databaseHandle, std::string query = "" ) {
+    KeyLookup<K, V>( int databaseHandle, string query = "" ) {
         DB = databaseHandle;
 
         if ( query ) {
@@ -21,7 +24,7 @@ public:
         return Collection.get( index );
     }
 
-    void loadByQuery( std::string query ) {
+    void loadByQuery( string query ) {
         auto error = mysql_query( DB, query );
         if ( error ) {
             throw mysql_error( DB );
@@ -39,6 +42,6 @@ public:
     }
 
 private:
-    std::map<K, V> Collection;
+    map<K, V> Collection;
     int32_t DB const;
 };

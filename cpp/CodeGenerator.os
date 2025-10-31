@@ -67,7 +67,7 @@ public object CodeGenerator {
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Function.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         int count;
         foreach ( Pair<string, EntityType> pair : entities ) {
@@ -79,18 +79,18 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_PARAMETER_USAGE,       generateParameterUsage( entity.Name, entity.Fields, true ) );       // parameter usage list
             template.ReplaceAll( TEMPLATE_RETURN_TYPE,           generateReturnType( entity.Fields ) );                              // return type
 
-            var outFile = new System.IO.File( Config.Output + "/Functions/" + Utils.prettify( entity.Name ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Functions/" + Utils.prettify( entity.Name ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.Name ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.Name ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Functions/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Functions/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -107,7 +107,7 @@ public object CodeGenerator {
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Procedure.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         int count;
         foreach ( Pair<string, EntityType> pair : entities ) {
@@ -118,18 +118,18 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_PARAMETER_DECLARATION, generateParameterDeclaration( entity.Name, entity.Fields ) ); // parameter declaration list
             template.ReplaceAll( TEMPLATE_PARAMETER_USAGE,       generateParameterUsage( entity.Name, entity.Fields ) );       // parameter usage list
 
-            var outFile = new System.IO.File( Config.Output + "/Procedures/" + Utils.prettify( entity.Name ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Procedures/" + Utils.prettify( entity.Name ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.Name ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.Name ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Procedures/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Procedures/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -164,7 +164,7 @@ public object CodeGenerator {
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Lookup.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         int count;
         foreach ( Pair<string, EntityType> entity : entities ) {
@@ -180,18 +180,18 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_ENUM_FROM_TOKEN, generateEnumFromToken( Utils.prettify( entity.first ), entity.second ) );        // enum FromToken
             template.ReplaceAll( TEMPLATE_ENUM_TO_TOKEN, generateEnumToToken( Utils.prettify( entity.first ), entity.second ) );            // enum ToToken
 
-            var outFile = new System.IO.File( Config.Output + "/Lookups/" + Utils.prettify( entity.first ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Lookups/" + Utils.prettify( entity.first ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.first ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.first ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Lookups/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Lookups/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -225,7 +225,7 @@ public object CodeGenerator {
             result += "    " + t.Token + " = " + t.Id;
         }
 
-        return result + ";";
+        return result;
     }
 
     private string generateEnumFromToken( string type, EntityType entity ) {
@@ -257,7 +257,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "    public int " + t.Token + " const = " + t.Id;
+            result += "    static const int32_t " + t.Token + " = " + t.Id;
         }
 
         return result + ";";
@@ -419,7 +419,7 @@ public object CodeGenerator {
         var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "table_without_id.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         var idField = new FieldEntry( PrimaryKeyName, "Id", "int", "int" );
 
@@ -437,18 +437,18 @@ public object CodeGenerator {
             replaceSpecialTemplates( template, entity.second );
             replaceUserTemplates( template );
 
-            var outFile = new System.IO.File( Config.Output + "/Tables/" + Utils.prettify( entity.first ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Tables/" + Utils.prettify( entity.first ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.first ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.first ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Tables/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Tables/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -469,7 +469,7 @@ public object CodeGenerator {
         var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "view_without_id.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         var idField = new FieldEntry( PrimaryKeyName, "Id", "int", "int" );
 
@@ -487,18 +487,18 @@ public object CodeGenerator {
             replaceSpecialTemplates( template, entity.second );
             replaceUserTemplates( template );
 
-            var outFile = new System.IO.File( Config.Output + "/Views/" + Utils.prettify( entity.first ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Views/" + Utils.prettify( entity.first ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.first ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.first ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Views/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Views/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 

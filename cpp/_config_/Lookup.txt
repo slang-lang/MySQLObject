@@ -15,12 +15,12 @@ public:
     static int32_t FromToken( std::string token ) {
 #ENUM_FROM_TOKEN#
 
-        throw std::string( "invalid token '" + token + "'" );
+        throw std::string( "invalid token '" ) + token + std::string( "'" );
     }
 
     static std::string ToToken( int32_t id ) {
 #ENUM_TO_TOKEN#
 
-        throw std::string( "invalid id " + id );
+        throw std::string( "invalid id " ) + std::to_string( id );
     }
 };

@@ -1,4 +1,10 @@
 
+#include <ctime>
+#include <string>
+#include <mariadb/mysql.h>
+
+using string = std::string;
+
 void #ENTITY_NAME_PRETTY#( int32_t DB, #PARAMETER_DECLARATION# bool trace = false )
 {
     auto query = "CALL #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# );";
