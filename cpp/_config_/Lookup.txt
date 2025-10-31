@@ -1,0 +1,26 @@
+
+#include <stdexcept>
+#include <string>
+
+enum #ENTITY_NAME_PRETTY#
+{
+#ENUM_DECLARATION#
+};
+
+class #ENTITY_NAME_PRETTY#Converter
+{
+public:
+#ENUM_MEMBERS#
+
+    static int32_t FromToken( std::string token ) {
+#ENUM_FROM_TOKEN#
+
+        throw std::string( "invalid token '" + token + "'" );
+    }
+
+    static std::string ToToken( int32_t id ) {
+#ENUM_TO_TOKEN#
+
+        throw std::string( "invalid id " + id );
+    }
+};

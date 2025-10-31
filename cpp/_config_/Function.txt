@@ -1,0 +1,28 @@
+
+#RETURN_TYPE# #ENTITY_NAME_PRETTY#( int32_t DB, #PARAMETER_DECLARATION# bool trace = false ) {
+    auto query = "SELECT #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# ) AS RESULT";
+
+    auto startTime = time();
+
+    auto error = mysql_query( DB, query );
+    if ( error ) {
+        throw mysql_error( DB );
+    }
+
+    auto result = mysql_store_result( DB );
+    if ( !result ) {
+        throw mysql_error( DB );
+    }
+
+    if ( !mysql_fetch_row( result ) ) {
+        throw mysql_error( DB );
+    }
+
+    if ( trace ) {
+        auto duration = time() - startTime;
+
+        std::cout << "Executing <" << query << "> in " << duration << "s" << std::endl;
+    }
+
+    return static_cast<#RETURN_TYPE#>( mysql_get_field_value( result, "RESULT" ) );
+}

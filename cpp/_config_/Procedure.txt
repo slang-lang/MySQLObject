@@ -1,0 +1,30 @@
+
+void #ENTITY_NAME_PRETTY#( int32_t DB, #PARAMETER_DECLARATION# bool trace = false )
+{
+    auto query = "CALL #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# );";
+
+    auto startTime = time();
+
+    try {
+        auto error = mysql_query( DB, query );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        auto result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        mysql_free_result( result );
+    }
+    catch ( std::string e ) {
+        std::cout << "Exception: " << e << std::endl;
+    }
+
+    if ( trace ) {
+        auto duration = time() - startTime;
+
+        std::cout << "Executing <" + query + "> in " << duration << "s" << std::endl;
+    }
+}
