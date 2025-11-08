@@ -25,6 +25,9 @@ public object CodeGenerator {
         // prepare output folders for lookups, tables and views
         prepareFolders();
 
+        // generate C++ "driver"
+        generateDriver();
+
         // generate files for all stored functions
         generateFunctions();
 
@@ -55,6 +58,14 @@ public object CodeGenerator {
 
     private void disconnect() modify throws {
         mysql_close( mDatabaseHandle );
+    }
+
+    void generateDriver() const {
+        var template = new Scanner( CONFIG_DIRECTORY + "Driver.txt" ).getText();
+
+        var outFile = new System.IO.File( Config.Output + "/Driver.hpp", System.IO.File.AccessMode.WriteOnly );
+        outFile.write( cast<string>( template ) );
+        outFile.close();
     }
 
     private void generateFunctions() const {
@@ -148,7 +159,12 @@ public object CodeGenerator {
                 result += LINEBREAK;
             }
 
-            result += MEMBER_LOAD_PREFIX + field.PrettyName + " = cast<" + field.PrettyType + ">( mysql_get_field_value( result, \"" + field.RealName + "\" ) );";
+            switch ( field.PrettyType ) {
+                case "double":  { result += MEMBER_LOAD_PREFIX + field.PrettyName + " = atol( Driver::mysql_get_field_value( result, row, \"" + field.RealName + "\" ) );"; break; }
+                case "float":   { result += MEMBER_LOAD_PREFIX + field.PrettyName + " = atof( Driver::mysql_get_field_value( result, row, \"" + field.RealName + "\" ) );"; break; }
+                case "int32_t": { result += MEMBER_LOAD_PREFIX + field.PrettyName + " = atoi( Driver::mysql_get_field_value( result, row, \"" + field.RealName + "\" ) );"; break; }
+                case "string":  { result += MEMBER_LOAD_PREFIX + field.PrettyName + " = Driver::mysql_get_field_value( result, row, \"" + field.RealName + "\" );"; break; }
+            }
         }
 
         return result;
@@ -203,7 +219,7 @@ public object CodeGenerator {
 
             replaceUserTemplates( keyLookupTemplate );
 
-            var outFile = new System.IO.File( Config.Output + "/KeyLookup.os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/KeyLookup.hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( keyLookupTemplate ) );
             outFile.close();
         }
@@ -238,7 +254,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "        if ( token == \"" + t.Token + "\" ) return " + type + "." + t.Token + ";";
+            result += "        if ( token == \"" + t.Token + "\" ) return " + type + "::" + t.Token + ";";
         }
 
         return result;
@@ -257,7 +273,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "    static const int32_t " + t.Token + " = " + t.Id;
+            result += "    static constexpr int32_t " + t.Token + " = " + t.Id;
         }
 
         return result + ";";
@@ -273,7 +289,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "        if ( id == " + type + "." + t.Token + " ) return \"" + t.Token + "\";";
+            result += "        if ( id == " + type + "::" + t.Token + " ) return \"" + t.Token + "\";";
         }
 
         return result;
@@ -324,10 +340,10 @@ public object CodeGenerator {
             }
 
             if ( field.RealType == "datetime" || field.RealType == "timestamp" ) {
-                result += "`" + field.RealName + "` = NULLIF('\" + " + field.PrettyName + " + \"', '')";
+                result += "`" + field.RealName + "` = NULLIF('\" << " + field.PrettyName + " << \"', '')";
             }
             else {
-                result += "`" + field.RealName + "` = '\" + " + field.PrettyName + " + \"'";
+                result += "`" + field.RealName + "` = '\" << " + field.PrettyName + " << \"'";
             }
         }
 
@@ -347,10 +363,10 @@ public object CodeGenerator {
             }
 
             if ( field.RealType == "datetime" || field.RealType == "timestamp" ) {
-                result += "NULLIF('\" + " + field.PrettyName + " + \"', '')";
+                result += "NULLIF('\" << " + field.PrettyName + " << \"', '')";
             }
             else {
-                result += "'\" + " + field.PrettyName + " + \"'";
+                result += "'\" << " + field.PrettyName + " << \"'";
             }
         }
 
