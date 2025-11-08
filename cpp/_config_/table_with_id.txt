@@ -2,43 +2,45 @@
 #include <string>
 #include <vector>
 
-using string = std::string;
-using vector = std::vector;
+using std::string;
+using std::vector;
 
 class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
 {
 public:
 #MEMBER_DECLARATION#
 
-    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( int32_t databaseHandle ) {
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle ) {
         DB = databaseHandle;
     }
 
-    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( int32_t databaseHandle, string query ) {
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle, string query ) {
         DB = databaseHandle;
 
         loadByQuery( query );
     }
 
-    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( int32_t databaseHandle, int32_t result ) {
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle, MYSQL_RES* result ) {
         DB = databaseHandle;
 
         loadByResult( result );
     }
 
     void deleteByPrimaryKey( #PRIMARY_KEY_TYPE# #PRIMARY_KEY_NAME# ) {
-        auto query = "DELETE FROM #ENTITY_NAME# WHERE #PRIMARY_KEY_NAME# = '" + #PRIMARY_KEY_NAME# + "'";
+        std::stringstream query;
+        query << "DELETE FROM #ENTITY_NAME# WHERE #PRIMARY_KEY_NAME# = '" << #PRIMARY_KEY_NAME# << "'";
 
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.str().c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
     }
 
     void insert( bool reloadAfterInsert = false ) {
-        auto query = "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
+        std::stringstream query;
+        query << "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
 
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.str().c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
@@ -53,9 +55,10 @@ public:
     }
 
     void insertIgnore( bool reloadAfterInsert = false ) {
-        auto query = "INSERT IGNORE INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
+        std::stringstream query;
+        query << "INSERT IGNORE INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
 
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.str().c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
@@ -70,9 +73,10 @@ public:
     }
 
     void insertOrUpdate( bool reloadAfterInsert = false ) {
-        auto query = "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# ) ON DUPLICATE KEY UPDATE #MEMBER_PAIR_WITHOUT_PRIMARY#";
+        std::stringstream query;
+        query << "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# ) ON DUPLICATE KEY UPDATE #MEMBER_PAIR_WITHOUT_PRIMARY#";
 
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.str().c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
@@ -87,43 +91,52 @@ public:
     }
 
     void loadByQuery( string query ) {
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
 
-        auto result = mysql_store_result( DB );
-        if ( !mysql_fetch_row( result ) ) {
-            throw "no result found";
+        auto* result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
         }
 
-#MEMBER_LOAD#
+        loadByResult( result );
     }
 
     void loadByPrimaryKey( #PRIMARY_KEY_TYPE# #PRIMARY_KEY_NAME# ) {
-        auto query = "SELECT * FROM #ENTITY_NAME# WHERE #PRIMARY_KEY_NAME# = '" + #PRIMARY_KEY_NAME# + "'";
+        std::stringstream query;
+        query << "SELECT * FROM #ENTITY_NAME# WHERE #PRIMARY_KEY_NAME# = '" << #PRIMARY_KEY_NAME# << "'";
 
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.str().c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
 
-        auto result = mysql_store_result( DB );
-        if ( !mysql_fetch_row( result ) ) {
-            throw "no result found";
+        auto* result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        loadByResult( result );
+    }
+
+    bool loadByResult( MYSQL_RES* result ) {
+        MYSQL_ROW row;
+        if ( !(row = mysql_fetch_row( result ) ) ) {
+            return false;
         }
 
 #MEMBER_LOAD#
-    }
 
-    void loadByResult( int32_t result ) {
-#MEMBER_LOAD#
+        return true;
     }
 
     void update( bool reloadAfterUpdate = false ) {
-        auto query = "UPDATE #ENTITY_NAME# SET #MEMBER_PAIR_WITHOUT_PRIMARY# WHERE #PRIMARY_KEY_NAME# = '" + #PRIMARY_KEY_NAME_PRETTY# + "'";
+        std::stringstream query;
+        query << "UPDATE #ENTITY_NAME# SET #MEMBER_PAIR_WITHOUT_PRIMARY# WHERE #PRIMARY_KEY_NAME# = '" << #PRIMARY_KEY_NAME_PRETTY# << "'";
 
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.str().c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
@@ -137,45 +150,45 @@ public:
         return #PRIMARY_KEY_NAME_PRETTY# == other.#PRIMARY_KEY_NAME_PRETTY#;
     }
 
-    string operator( string ) const {
-        return "#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# { #MEMBER_VALUES# }";
+    string toString() const {
+        std::stringstream result;
+        result << "#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# { #MEMBER_VALUES# }";
+
+        return result.str();
     }
 
 private:
     int32_t getLastInsertId() const {
-        auto query = "SELECT LAST_INSERT_ID() AS id;";
-
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, "SELECT LAST_INSERT_ID() AS id;" );
         if ( error ) {
             throw mysql_error( DB );
         }
 
-        auto result = mysql_store_result( DB );
+        auto* result = mysql_store_result( DB );
         if ( !result ) {
             throw mysql_error( DB );
         }
 
-        if ( !mysql_fetch_row( result ) ) {
+        MYSQL_ROW row;
+        if ( !( row = mysql_fetch_row( result ) ) ) {
             throw mysql_error( DB );
         }
 
-        return static_cast<int32_t>( mysql_get_field_value( result, "id" ) );
+        return atoi( Driver::mysql_get_field_value( result, row, "#PRIMARY_KEY_NAME_PRETTY#" ) );
     }
 
 private:
-    int32_t DB const;
+    MYSQL* DB;
 };
 
 
-class #TABLE_PREFIX##ENTITY_NAME_PRETTY#Collection implements ICollection
-{ //<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#>
+class #TABLE_PREFIX##ENTITY_NAME_PRETTY#Collection
 {
 public:
-    #TABLE_PREFIX##ENTITY_NAME_PRETTY#Collection( int32_t databaseHandle, string query = "" ) {
-        Collection = new Vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#>();
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY#Collection( MYSQL* databaseHandle, string query = "" ) {
         DB = databaseHandle;
 
-        if ( query ) {
+        if ( !query.empty() ) {
             loadByQuery( query );
         }
     }
@@ -189,41 +202,43 @@ public:
     }
 
     #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# first() const {
-        return Collection.first();
+        return Collection.front();
     }
 
-    Iterator<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#> getIterator() const {
-        return Collection.getIterator();
+    vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#>::iterator begin() {
+        return Collection.begin();
+    }
+
+    vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#>::iterator end() {
+        return Collection.end();
     }
 
     #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# last() const {
-        return Collection.last();
+        return Collection.back();
     }
 
     void loadByQuery( string query ) {
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
 
         Collection.clear();
 
-        auto result = mysql_store_result( DB );
-        while ( mysql_fetch_row( result ) ) {
-            auto record = new #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( DB );
-            record.loadByResult( result );
-
+        auto* result = mysql_store_result( DB );
+        #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
             Collection.push_back( record );
         }
+
+        mysql_free_result(result);
     }
 
-    void loadByResult( int32_t result ) {
+    void loadByResult( MYSQL_RES* result ) {
         Collection.clear();
 
-        while ( mysql_fetch_row( result ) ) {
-            auto record = new #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( DB );
-            record.loadByResult( result );
-
+        #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
             Collection.push_back( record );
         }
     }
@@ -233,7 +248,7 @@ public:
     }
 
     void pop_front() {
-        Collection.pop_front();
+        Collection.erase(Collection.begin());
     }
 
     int32_t size() const {
@@ -246,5 +261,5 @@ public:
 
 private:
     vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#> Collection;
-    int32_t DB const;
+    MYSQL* DB;
 };

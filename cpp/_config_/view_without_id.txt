@@ -1,126 +1,146 @@
 
-import System.Collections.Vector;
+#include <string>
+#include <vector>
 
-public object #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# {
+using std::string;
+using std::vector;
+
+class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
+{
+public:
 #MEMBER_DECLARATION#
 
-    public void Constructor( int databaseHandle ) {
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#( MYSQL* databaseHandle ) {
         DB = databaseHandle;
     }
 
-    public void Constructor( int databaseHandle, string query ) {
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#( MYSQL* databaseHandle, string query ) {
         DB = databaseHandle;
 
         loadByQuery( query );
     }
 
-    public void Constructor( int databaseHandle, int result ) {
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#( MYSQL* databaseHandle, MYSQL_RES* result ) {
         DB = databaseHandle;
 
         loadByResult( result );
     }
 
-    public void loadByQuery( string query ) modify throws {
-        var error = mysql_query( DB, query );
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
 
-        var result = mysql_store_result( DB );
-        if ( !mysql_fetch_row( result ) ) {
-            throw "no result found";
+        auto* result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        loadByResult( result );
+    }
+
+    bool loadByResult( MYSQL_RES* result ) {
+        MYSQL_ROW row;
+        if ( !(row = mysql_fetch_row( result ) ) ) {
+            return false;
         }
 
 #MEMBER_LOAD#
+
+        return true;
     }
 
-    public void loadByResult( int result ) modify {
-#MEMBER_LOAD#
+    string toString() const {
+        std::stringstream result;
+        result << "#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# { #MEMBER_VALUES# }";
+
+        return result.str();
     }
 
-    public string =operator( string ) const {
-        return "#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# { #MEMBER_VALUES# }";
-    }
-
-    private int DB const;
-}
+private:
+    MYSQL* DB;
+};
 
 
-public object #VIEW_PREFIX##ENTITY_NAME_PRETTY#Collection implements ICollection /*<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#>*/ {
-    public void Constructor( int databaseHandle, string query = "" ) {
-        Collection = new Vector<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#>();
+class #VIEW_PREFIX##ENTITY_NAME_PRETTY#Collection
+{
+public:
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY#Collection( MYSQL* databaseHandle, string query = "" ) {
         DB = databaseHandle;
 
-        if ( query ) {
+        if ( !query.empty() ) {
             loadByQuery( query );
         }
     }
 
-    public #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# at( int index ) const throws {
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# at( int32_t index ) const {
         return Collection.at( index );
     }
 
-    public bool empty() const {
+    bool empty() const {
         return Collection.empty();
     }
 
-    public #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# first() const {
-        return Collection.first();
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# first() const {
+        return Collection.front();
     }
 
-    public Iterator<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#> getIterator() const {
-        return Collection.getIterator();
+    vector<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#>::iterator begin() {
+        return Collection.begin();
     }
 
-    public #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# last() const {
-        return Collection.last();
+    vector<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#>::iterator end() {
+        return Collection.end();
     }
 
-    public void loadByQuery( string query ) modify throws {
-        var error = mysql_query( DB, query );
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# last() const {
+        return Collection.back();
+    }
+
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
 
         Collection.clear();
 
-        var result = mysql_store_result( DB );
-        while ( mysql_fetch_row( result ) ) {
-            var record = new #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#( DB );
-            record.loadByResult( result );
-
+        auto* result = mysql_store_result( DB );
+        #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
             Collection.push_back( record );
         }
+
+        mysql_free_result(result);
     }
 
-    public void loadByResult( int result ) modify throws {
+    void loadByResult( MYSQL_RES* result ) {
         Collection.clear();
 
-        while ( mysql_fetch_row( result ) ) {
-            var record = new #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#( DB );
-            record.loadByResult( result );
-
+        #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
             Collection.push_back( record );
         }
     }
 
-    public void pop_back() modify {
+    void pop_back() {
         Collection.pop_back();
     }
 
-    public void pop_front() modify {
-        Collection.pop_front();
+    void pop_front() {
+        Collection.erase(Collection.begin());
     }
 
-    public int size() const {
+    int32_t size() const {
         return Collection.size();
     }
 
-    public void push_back( #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# item ) modify {
+    void push_back( #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# item ) {
         Collection.push_back( item );
     }
 
-    private Vector<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#> Collection;
-    private int DB const;
-}
-
+private:
+    vector<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#> Collection;
+    MYSQL* DB;
+};

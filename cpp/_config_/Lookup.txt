@@ -1,8 +1,7 @@
 
-#include <stdexcept>
 #include <string>
 
-enum #ENTITY_NAME_PRETTY#
+enum class #ENTITY_NAME_PRETTY#
 {
 #ENUM_DECLARATION#
 };
@@ -12,15 +11,15 @@ class #ENTITY_NAME_PRETTY#Converter
 public:
 #ENUM_MEMBERS#
 
-    static int32_t FromToken( std::string token ) {
+    static #ENTITY_NAME_PRETTY# FromToken( std::string token ) {
 #ENUM_FROM_TOKEN#
 
         throw std::string( "invalid token '" ) + token + std::string( "'" );
     }
 
-    static std::string ToToken( int32_t id ) {
+    static std::string ToToken( #ENTITY_NAME_PRETTY# id ) {
 #ENUM_TO_TOKEN#
 
-        throw std::string( "invalid id " ) + std::to_string( id );
+        throw std::string( "invalid id '" ) + std::to_string( static_cast<int32_t>( id ) ) + std::string( "'" );
     }
 };

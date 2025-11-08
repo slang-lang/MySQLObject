@@ -2,16 +2,17 @@
 #include <map>
 #include <string>
 
-using map    = std::map;
-using string = std::string;
+using std::map;
+using std::string;
 
-class KeyLookup<K, V>
+template<typename K, typename V>
+class KeyLookup
 {
 public:
-    KeyLookup<K, V>( int databaseHandle, string query = "" ) {
+    KeyLookup<K, V>( MYSQL* databaseHandle, string query = "" ) {
         DB = databaseHandle;
 
-        if ( query ) {
+        if ( !query.empty() ) {
             loadByQuery( query );
         }
     }
@@ -25,23 +26,21 @@ public:
     }
 
     void loadByQuery( string query ) {
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
 
         Collection.clear();
 
-        auto result = mysql_store_result( DB );
-        while ( mysql_fetch_row( result ) ) {
-            V record( DB );
-            record.loadByResult( result );
-
+        auto* result = mysql_store_result( DB );
+        V record( DB );
+        while ( record.loadByResult( result ) ) {
             Collection.insert( static_cast<K>( record.KeyId ), record );
         }
     }
 
 private:
     map<K, V> Collection;
-    int32_t DB const;
+    MYSQL* DB;
 };

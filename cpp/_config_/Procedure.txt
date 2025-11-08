@@ -3,16 +3,16 @@
 #include <string>
 #include <mariadb/mysql.h>
 
-using string = std::string;
+using std::string;
 
-void #ENTITY_NAME_PRETTY#( int32_t DB, #PARAMETER_DECLARATION# bool trace = false )
+void #ENTITY_NAME_PRETTY#( MYSQL* DB, #PARAMETER_DECLARATION# bool trace = false )
 {
     auto query = "CALL #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# );";
 
-    auto startTime = time();
+    auto startTime = time( nullptr );
 
     try {
-        auto error = mysql_query( DB, query );
+        auto error = mysql_query( DB, query.c_str() );
         if ( error ) {
             throw mysql_error( DB );
         }
@@ -29,7 +29,7 @@ void #ENTITY_NAME_PRETTY#( int32_t DB, #PARAMETER_DECLARATION# bool trace = fals
     }
 
     if ( trace ) {
-        auto duration = time() - startTime;
+        auto duration = time( nullptr ) - startTime;
 
         std::cout << "Executing <" + query + "> in " << duration << "s" << std::endl;
     }

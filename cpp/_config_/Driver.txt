@@ -1,0 +1,39 @@
+#pragma once
+
+#include <algorithm>
+#include <cassert>
+#include <string>
+#include <mariadb/mysql.h>
+
+class Driver
+{
+public:
+    static int32_t mysql_get_field_index(MYSQL_RES* res, const char* name) {
+        if (!res || !name)
+            return -1;
+
+        auto num_fields = mysql_num_fields(res);
+        auto* fields    = mysql_fetch_fields(res);
+        std::string wanted(name);
+        std::transform(wanted.begin(), wanted.end(), wanted.begin(), [](unsigned char c){ return std::tolower(c); });
+
+        for (unsigned int i = 0; i < num_fields; ++i) {
+            const char* fname = fields[i].name ? fields[i].name : "";
+            std::string lname(fname);
+            std::transform(lname.begin(), lname.end(), lname.begin(), [](unsigned char c){ return std::tolower(c); });
+            if (lname == wanted) {
+                return static_cast<int32_t>(i);
+            }
+        }
+
+        return -1;
+    }
+
+    static const char* mysql_get_field_value(MYSQL_RES* res, MYSQL_ROW row, const char* name) {
+        auto index = mysql_get_field_index(res, name);
+        if (index == -1)
+            return nullptr;
+
+        return row[index] ? row[index] : "";
+    }
+};
