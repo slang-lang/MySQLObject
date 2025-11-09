@@ -1,0 +1,146 @@
+
+#include <string>
+#include <vector>
+
+using std::string;
+using std::vector;
+
+class #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#
+{
+public:
+#MEMBER_DECLARATION#
+
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#( MYSQL* databaseHandle ) {
+        DB = databaseHandle;
+    }
+
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#( MYSQL* databaseHandle, string query ) {
+        DB = databaseHandle;
+
+        loadByQuery( query );
+    }
+
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#( MYSQL* databaseHandle, MYSQL_RES* result ) {
+        DB = databaseHandle;
+
+        loadByResult( result );
+    }
+
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        auto* result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        loadByResult( result );
+    }
+
+    bool loadByResult( MYSQL_RES* result ) {
+        MYSQL_ROW row;
+        if ( !(row = mysql_fetch_row( result ) ) ) {
+            return false;
+        }
+
+#MEMBER_LOAD#
+
+        return true;
+    }
+
+    string toString() const {
+        std::stringstream result;
+        result << "#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# { #MEMBER_VALUES# }";
+
+        return result.str();
+    }
+
+private:
+    MYSQL* DB;
+};
+
+
+class #VIEW_PREFIX##ENTITY_NAME_PRETTY#Collection
+{
+public:
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY#Collection( MYSQL* databaseHandle, string query = "" ) {
+        DB = databaseHandle;
+
+        if ( !query.empty() ) {
+            loadByQuery( query );
+        }
+    }
+
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# at( int32_t index ) const {
+        return Collection.at( index );
+    }
+
+    bool empty() const {
+        return Collection.empty();
+    }
+
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# first() const {
+        return Collection.front();
+    }
+
+    vector<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#>::iterator begin() {
+        return Collection.begin();
+    }
+
+    vector<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#>::iterator end() {
+        return Collection.end();
+    }
+
+    #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# last() const {
+        return Collection.back();
+    }
+
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        Collection.clear();
+
+        auto* result = mysql_store_result( DB );
+        #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
+            Collection.push_back( record );
+        }
+
+        mysql_free_result(result);
+    }
+
+    void loadByResult( MYSQL_RES* result ) {
+        Collection.clear();
+
+        #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
+            Collection.push_back( record );
+        }
+    }
+
+    void pop_back() {
+        Collection.pop_back();
+    }
+
+    void pop_front() {
+        Collection.erase(Collection.begin());
+    }
+
+    int32_t size() const {
+        return Collection.size();
+    }
+
+    void push_back( #VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX# item ) {
+        Collection.push_back( item );
+    }
+
+private:
+    vector<#VIEW_PREFIX##ENTITY_NAME_PRETTY##VIEW_POSTFIX#> Collection;
+    MYSQL* DB;
+};

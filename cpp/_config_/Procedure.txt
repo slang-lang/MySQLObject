@@ -1,0 +1,36 @@
+
+#include <ctime>
+#include <string>
+#include <mariadb/mysql.h>
+
+using std::string;
+
+void #ENTITY_NAME_PRETTY#( MYSQL* DB, #PARAMETER_DECLARATION# bool trace = false )
+{
+    auto query = "CALL #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# );";
+
+    auto startTime = time( nullptr );
+
+    try {
+        auto error = mysql_query( DB, query.c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        auto result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        mysql_free_result( result );
+    }
+    catch ( std::string e ) {
+        std::cout << "Exception: " << e << std::endl;
+    }
+
+    if ( trace ) {
+        auto duration = time( nullptr ) - startTime;
+
+        std::cout << "Executing <" + query + "> in " << duration << "s" << std::endl;
+    }
+}

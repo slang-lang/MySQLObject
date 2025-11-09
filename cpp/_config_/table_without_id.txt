@@ -1,0 +1,176 @@
+
+#include <string>
+#include <vector>
+
+using std::string;
+using std::vector;
+
+class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
+{
+public:
+#MEMBER_DECLARATION#
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle ) {
+        DB = databaseHandle;
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle, string query ) {
+        DB = databaseHandle;
+
+        loadByQuery( query );
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle, MYSQL_RES* result ) {
+        DB = databaseHandle;
+
+        loadByResult( result );
+    }
+
+    void insert() {
+        std::stringstream query;
+        query << "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+    }
+
+    void insertIgnore() {
+        std::stringstream query;
+        query << "INSERT IGNORE INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+    }
+
+    void insertOrUpdate() {
+        std::stringstream query;
+        query << "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# ) ON DUPLICATE KEY UPDATE #MEMBER_PAIR_WITHOUT_PRIMARY#";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+    }
+
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        auto* result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        loadByResult( result );
+    }
+
+    bool loadByResult( MYSQL_RES* result ) {
+        MYSQL_ROW row;
+        if ( !(row = mysql_fetch_row( result ) ) ) {
+            return false;
+        }
+
+#MEMBER_LOAD#
+
+        return true;
+    }
+
+    string toString() const {
+        std::stringstream result;
+        result << "#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# { #MEMBER_VALUES# }";
+
+        return result.str();
+    }
+
+private:
+    MYSQL* DB;
+};
+
+
+class #TABLE_PREFIX##ENTITY_NAME_PRETTY#Collection
+{
+public:
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY#Collection( MYSQL* databaseHandle, string query = "" ) {
+        DB = databaseHandle;
+
+        if ( !query.empty() ) {
+            loadByQuery( query );
+        }
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# at( int32_t index ) const {
+        return Collection.at( index );
+    }
+
+    bool empty() const {
+        return Collection.empty();
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# first() const {
+        return Collection.front();
+    }
+
+    vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#>::iterator begin() {
+        return Collection.begin();
+    }
+
+    vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#>::iterator end() {
+        return Collection.end();
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# last() const {
+        return Collection.back();
+    }
+
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        Collection.clear();
+
+        auto* result = mysql_store_result( DB );
+        #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
+            Collection.push_back( record );
+        }
+
+        mysql_free_result(result);
+    }
+
+    void loadByResult( MYSQL_RES* result ) {
+        Collection.clear();
+
+        #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
+            Collection.push_back( record );
+        }
+    }
+
+    void pop_back() {
+        Collection.pop_back();
+    }
+
+    void pop_front() {
+        Collection.erase(Collection.begin());
+    }
+
+    int32_t size() const {
+        return Collection.size();
+    }
+
+    void push_back( #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# item ) {
+        Collection.push_back( item );
+    }
+
+private:
+    vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#> Collection;
+    MYSQL* DB;
+};

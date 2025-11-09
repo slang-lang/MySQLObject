@@ -1,0 +1,265 @@
+
+#include <string>
+#include <vector>
+
+using std::string;
+using std::vector;
+
+class #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#
+{
+public:
+#MEMBER_DECLARATION#
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle ) {
+        DB = databaseHandle;
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle, string query ) {
+        DB = databaseHandle;
+
+        loadByQuery( query );
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#( MYSQL* databaseHandle, MYSQL_RES* result ) {
+        DB = databaseHandle;
+
+        loadByResult( result );
+    }
+
+    void deleteByPrimaryKey( #PRIMARY_KEY_TYPE# #PRIMARY_KEY_NAME# ) {
+        std::stringstream query;
+        query << "DELETE FROM #ENTITY_NAME# WHERE #PRIMARY_KEY_NAME# = '" << #PRIMARY_KEY_NAME# << "'";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+    }
+
+    void insert( bool reloadAfterInsert = false ) {
+        std::stringstream query;
+        query << "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        if ( reloadAfterInsert ) {
+            if ( !#PRIMARY_KEY_NAME_PRETTY# ) {
+                #PRIMARY_KEY_NAME_PRETTY# = getLastInsertId();
+            }
+
+            loadByPrimaryKey( #PRIMARY_KEY_NAME_PRETTY# );
+        }
+    }
+
+    void insertIgnore( bool reloadAfterInsert = false ) {
+        std::stringstream query;
+        query << "INSERT IGNORE INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# )";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        if ( reloadAfterInsert ) {
+            if ( !#PRIMARY_KEY_NAME_PRETTY# ) {
+                #PRIMARY_KEY_NAME_PRETTY# = getLastInsertId();
+            }
+
+            loadByPrimaryKey( #PRIMARY_KEY_NAME_PRETTY# );
+        }
+    }
+
+    void insertOrUpdate( bool reloadAfterInsert = false ) {
+        std::stringstream query;
+        query << "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# ) ON DUPLICATE KEY UPDATE #MEMBER_PAIR_WITHOUT_PRIMARY#";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        if ( reloadAfterInsert ) {
+            if ( !#PRIMARY_KEY_NAME_PRETTY# ) {
+                #PRIMARY_KEY_NAME_PRETTY# = getLastInsertId();
+            }
+
+            loadByPrimaryKey( #PRIMARY_KEY_NAME_PRETTY# );
+        }
+    }
+
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        auto* result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        loadByResult( result );
+    }
+
+    void loadByPrimaryKey( #PRIMARY_KEY_TYPE# #PRIMARY_KEY_NAME# ) {
+        std::stringstream query;
+        query << "SELECT * FROM #ENTITY_NAME# WHERE #PRIMARY_KEY_NAME# = '" << #PRIMARY_KEY_NAME# << "'";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        auto* result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        loadByResult( result );
+    }
+
+    bool loadByResult( MYSQL_RES* result ) {
+        MYSQL_ROW row;
+        if ( !(row = mysql_fetch_row( result ) ) ) {
+            return false;
+        }
+
+#MEMBER_LOAD#
+
+        return true;
+    }
+
+    void update( bool reloadAfterUpdate = false ) {
+        std::stringstream query;
+        query << "UPDATE #ENTITY_NAME# SET #MEMBER_PAIR_WITHOUT_PRIMARY# WHERE #PRIMARY_KEY_NAME# = '" << #PRIMARY_KEY_NAME_PRETTY# << "'";
+
+        auto error = mysql_query( DB, query.str().c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        if ( reloadAfterUpdate ) {
+            loadByPrimaryKey( #PRIMARY_KEY_NAME_PRETTY# );
+        }
+    }
+
+    bool operator==( const #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#& other ) const {
+        return #PRIMARY_KEY_NAME_PRETTY# == other.#PRIMARY_KEY_NAME_PRETTY#;
+    }
+
+    string toString() const {
+        std::stringstream result;
+        result << "#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# { #MEMBER_VALUES# }";
+
+        return result.str();
+    }
+
+private:
+    int32_t getLastInsertId() const {
+        auto error = mysql_query( DB, "SELECT LAST_INSERT_ID() AS id;" );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        auto* result = mysql_store_result( DB );
+        if ( !result ) {
+            throw mysql_error( DB );
+        }
+
+        MYSQL_ROW row;
+        if ( !( row = mysql_fetch_row( result ) ) ) {
+            throw mysql_error( DB );
+        }
+
+        return atoi( Driver::mysql_get_field_value( result, row, "#PRIMARY_KEY_NAME_PRETTY#" ) );
+    }
+
+private:
+    MYSQL* DB;
+};
+
+
+class #TABLE_PREFIX##ENTITY_NAME_PRETTY#Collection
+{
+public:
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY#Collection( MYSQL* databaseHandle, string query = "" ) {
+        DB = databaseHandle;
+
+        if ( !query.empty() ) {
+            loadByQuery( query );
+        }
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# at( int32_t index ) const {
+        return Collection.at( index );
+    }
+
+    bool empty() const {
+        return Collection.empty();
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# first() const {
+        return Collection.front();
+    }
+
+    vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#>::iterator begin() {
+        return Collection.begin();
+    }
+
+    vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#>::iterator end() {
+        return Collection.end();
+    }
+
+    #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# last() const {
+        return Collection.back();
+    }
+
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        Collection.clear();
+
+        auto* result = mysql_store_result( DB );
+        #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
+            Collection.push_back( record );
+        }
+
+        mysql_free_result(result);
+    }
+
+    void loadByResult( MYSQL_RES* result ) {
+        Collection.clear();
+
+        #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# record( DB );
+        while ( record.loadByResult( result ) ) {
+            Collection.push_back( record );
+        }
+    }
+
+    void pop_back() {
+        Collection.pop_back();
+    }
+
+    void pop_front() {
+        Collection.erase(Collection.begin());
+    }
+
+    int32_t size() const {
+        return Collection.size();
+    }
+
+    void push_back( #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# item ) {
+        Collection.push_back( item );
+    }
+
+private:
+    vector<#TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX#> Collection;
+    MYSQL* DB;
+};

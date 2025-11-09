@@ -1,0 +1,36 @@
+
+#include <ctime>
+#include <string>
+#include <mariadb/mysql.h>
+
+using std::string;
+
+#RETURN_TYPE# #ENTITY_NAME_PRETTY#( MYSQL* DB, #PARAMETER_DECLARATION# bool trace = false )
+{
+    auto query = "SELECT #ENTITY_NAME_PRETTY#( #PARAMETER_USAGE# ) AS RESULT";
+
+    auto startTime = time( nullptr );
+
+    auto error = mysql_query( DB, query.c_str() );
+    if ( error ) {
+        throw mysql_error( DB );
+    }
+
+    auto result = mysql_store_result( DB );
+    if ( !result ) {
+        throw mysql_error( DB );
+    }
+
+    MYSQL_ROW row;
+    if ( !( row = mysql_fetch_row( result ) ) ) {
+        throw mysql_error( DB );
+    }
+
+    if ( trace ) {
+        auto duration = time( nullptr ) - startTime;
+
+        std::cout << "Executing <" << query << "> in " << duration << "s" << std::endl;
+    }
+
+    return static_cast<#RETURN_TYPE#>( Driver::mysql_get_field_value( result, row, "RESULT" ) );
+}
