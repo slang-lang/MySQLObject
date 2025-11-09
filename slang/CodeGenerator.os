@@ -11,6 +11,11 @@ import TemplateLookup;
 import Utils;
 
 
+private string FILE_EXTENSION const = ".os";
+private string LOOKUPS_FOLDER const = "Lookups/";
+private string TABLES_FOLDER const  = "Tables/";
+private string VIEWS_FOLDER const   = "Views/";
+
 public object CodeGenerator {
     public void process() modify throws {
         // connect to database
@@ -24,6 +29,9 @@ public object CodeGenerator {
 
         // prepare output folders for lookups, tables and views
         prepareFolders();
+
+        // prepare extension fields for entities
+        //prepareExtensions();
 
         // generate files for all stored functions
         generateFunctions();
@@ -47,7 +55,7 @@ public object CodeGenerator {
     private void connect() modify throws {
         mDatabaseHandle = mysql_init();
         mDatabaseHandle = mysql_real_connect( mDatabaseHandle, Config.Host, Config.Port, Config.User, Config.Password, Config.Database );
-    
+
         if ( !mDatabaseHandle ) {
             throw "failed to connect to database '" + Config.Database + "'";
         }
@@ -140,7 +148,7 @@ public object CodeGenerator {
         string result;
 
         foreach ( FieldEntry field : fields ) {
-            if ( !usePrimaryKey && field.RealName == PrimaryKeyName ) {
+            if ( !usePrimaryKey && field.RealName == PrimaryKeyName && !field.Extend ) {
                 continue;
             }
 
@@ -180,7 +188,7 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_ENUM_FROM_TOKEN, generateEnumFromToken( Utils.prettify( entity.first ), entity.second ) );        // enum FromToken
             template.ReplaceAll( TEMPLATE_ENUM_TO_TOKEN, generateEnumToToken( Utils.prettify( entity.first ), entity.second ) );            // enum ToToken
 
-            var outFile = new System.IO.File( Config.Output + "/Lookups/" + Utils.prettify( entity.first ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + LOOKUPS_FOLDER + Utils.prettify( entity.first ) + FILE_EXTENSION, System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
@@ -191,7 +199,7 @@ public object CodeGenerator {
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Lookups/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + LOOKUPS_FOLDER + "All.os", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -203,7 +211,7 @@ public object CodeGenerator {
 
             replaceUserTemplates( keyLookupTemplate );
 
-            var outFile = new System.IO.File( Config.Output + "/KeyLookup.os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "KeyLookup.os", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( keyLookupTemplate ) );
             outFile.close();
         }
@@ -297,7 +305,7 @@ public object CodeGenerator {
         string result;
 
         foreach ( FieldEntry field : fields ) {
-            if ( !usePrimaryKey && field.RealName == PrimaryKeyName ) {
+            if ( !usePrimaryKey && field.RealName == PrimaryKeyName && !field.Extend ) {
                continue;
             }
 
@@ -315,7 +323,7 @@ public object CodeGenerator {
         string result;
 
         foreach ( FieldEntry field : fields ) {
-            if ( !usePrimaryKey && field.RealName == PrimaryKeyName ) {
+            if ( !usePrimaryKey && field.RealName == PrimaryKeyName && !field.Extend ) {
                continue;
             }
 
@@ -338,7 +346,7 @@ public object CodeGenerator {
         string result;
 
         foreach ( FieldEntry field : fields ) {
-            if ( !usePrimaryKey && field.RealName == PrimaryKeyName ) {
+            if ( !usePrimaryKey && field.RealName == PrimaryKeyName && !field.Extend ) {
                continue;
             }
 
@@ -437,7 +445,7 @@ public object CodeGenerator {
             replaceSpecialTemplates( template, entity.second );
             replaceUserTemplates( template );
 
-            var outFile = new System.IO.File( Config.Output + "/Tables/" + Utils.prettify( entity.first ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + TABLES_FOLDER + Utils.prettify( entity.first ) + FILE_EXTENSION, System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
@@ -448,7 +456,7 @@ public object CodeGenerator {
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Tables/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + TABLES_FOLDER + "All.os", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -487,7 +495,7 @@ public object CodeGenerator {
             replaceSpecialTemplates( template, entity.second );
             replaceUserTemplates( template );
 
-            var outFile = new System.IO.File( Config.Output + "/Views/" + Utils.prettify( entity.first ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + VIEWS_FOLDER + Utils.prettify( entity.first ) + FILE_EXTENSION, System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
@@ -498,12 +506,43 @@ public object CodeGenerator {
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Views/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + VIEWS_FOLDER + "All.os", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
         print( "" + count + " view objects generated." );
     }
+
+    /*
+    private void prepareExtensions() modify {
+        // loop over all tables and views and check if there are planned extensions for them
+
+        var datatypeMapper = new DatatypeMapper();
+
+        var extensions = Extensions.Extensions;
+        if ( extensions.isMember( "Tables" ) ) {
+            var tables const = JsonObject extensions[ "Tables" ];
+
+            var entities = mEntityLookup.getTables();
+            foreach ( Pair<string, EntityType> entity : entities ) {
+                if( tables.isMember( entity.first ) ) {
+                    foreach ( JsonValue value : JsonArray tables[ entity.first ] ) {
+                        print( value.toString() );
+
+                        print( entity.second.Fields.size() );
+                        entity.second.Fields.push_back( new FieldEntry(
+                            "value",
+                            Utils.prettify( "value" ),
+                            value.asString(),
+                            datatypeMapper.lookupType( value.asString() )
+                        ) );
+                        print( entity.second.Fields.size() );
+                    }
+                }
+            }
+        }
+    }
+    */
 
     private void prepareFolders() modify {
         system( "mkdir -p " + Config.Output + "/Lookups" );
@@ -547,4 +586,3 @@ public object CodeGenerator {
     private EntityLookup mEntityLookup;
     private TemplateLookup mTemplateLookup;
 }
-

@@ -51,7 +51,7 @@ public object CodeExporter {
         var entities = mEntityLookup.getFunctions();
 
         int count;
-        foreach ( Pair<string,EntityType> entity : entities ) {
+        foreach ( Pair<string, EntityType> entity : entities ) {
             var query = "SHOW CREATE FUNCTION " + entity.first;
 
             var error = mysql_query( mDatabaseHandle, query );
