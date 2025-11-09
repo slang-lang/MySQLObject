@@ -1,0 +1,46 @@
+
+#include <map>
+#include <string>
+
+using std::map;
+using std::string;
+
+template<typename K, typename V>
+class KeyLookup
+{
+public:
+    KeyLookup<K, V>( MYSQL* databaseHandle, string query = "" ) {
+        DB = databaseHandle;
+
+        if ( !query.empty() ) {
+            loadByQuery( query );
+        }
+    }
+
+    bool contains( K index ) const {
+        return Collection.contains( index );
+    }
+
+    V get( K index ) const {
+        return Collection.get( index );
+    }
+
+    void loadByQuery( string query ) {
+        auto error = mysql_query( DB, query.c_str() );
+        if ( error ) {
+            throw mysql_error( DB );
+        }
+
+        Collection.clear();
+
+        auto* result = mysql_store_result( DB );
+        V record( DB );
+        while ( record.loadByResult( result ) ) {
+            Collection.insert( static_cast<K>( record.KeyId ), record );
+        }
+    }
+
+private:
+    map<K, V> Collection;
+    MYSQL* DB;
+};

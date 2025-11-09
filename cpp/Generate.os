@@ -58,6 +58,14 @@ private string processParameters( ParameterHandler params ) modify {
 		Config.Host = params[ "host" ].Value;
 		params.remove( "host" );
 	}
+	if ( params.contains( "help" ) ) {
+		printUsage();
+		exit( 0 );
+	}
+	if ( params.contains( "output" ) ) {
+		Config.Output = params[ "output" ].Value;
+		params.remove( "output" );
+	}
 	if ( params.contains( "password" ) ) {
 		Config.Password = params[ "password" ].Value;
 		params.remove( "password" );
@@ -66,31 +74,26 @@ private string processParameters( ParameterHandler params ) modify {
 		Config.Port = cast<int>( params[ "port" ].Value );
 		params.remove( "port" );
 	}
-	if ( params.contains( "target" ) ) {
-		Config.TargetDirectory = params[ "target" ].Value;
-		params.remove( "target" );
-	}
 	if ( params.contains( "user" ) ) {
 		Config.User = params[ "user" ].Value;
 		params.remove( "user" );
 	}
 
-	if ( !Config.TargetDirectory ) {
-		Config.TargetDirectory = Config.Database;
+	if ( !Config.Output ) {
+		Config.Output = Config.Database;
 	}
 
-	return params.empty() ? Config.TargetDirectory : params[ 0 ].Key;
+	return params.empty() ? Config.Output : params[ 0 ].Key;
 }
 
 private void printUsage() {
 	print( "Usage: program [options]" );
 	print( "" );
 	print( "	--database	sets the database schema to connect to" );
-	print( "	--format	sets the output format (os, php, etc.)" );
 	print( "	--host		sets the host to connect to" );
+	print( "	--output	sets the output folder for the generated files (default: current directory)" );
 	print( "	--password	sets the password used to connect to the database" );
 	print( "	--port		sets the port used to connected to the database" );
-	print( "	--target	sets the output folder for the generated files (default: current directory)" );
 	print( "	--user		sets the user used to connect to the database" );
 	print( "	--version	print program version" );
 	print( "" );

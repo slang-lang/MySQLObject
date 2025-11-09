@@ -11,11 +11,6 @@ import TemplateLookup;
 import Utils;
 
 
-private string FILE_EXTENSION const = ".os";
-private string LOOKUPS_FOLDER const = "Lookups/";
-private string TABLES_FOLDER const  = "Tables/";
-private string VIEWS_FOLDER const   = "Views/";
-
 public object CodeGenerator {
     public void process() modify throws {
         // connect to database
@@ -30,8 +25,8 @@ public object CodeGenerator {
         // prepare output folders for lookups, tables and views
         prepareFolders();
 
-        // prepare extension fields for entities
-        //prepareExtensions();
+        // generate C++ "driver"
+        generateDriver();
 
         // generate files for all stored functions
         generateFunctions();
@@ -65,6 +60,14 @@ public object CodeGenerator {
         mysql_close( mDatabaseHandle );
     }
 
+    void generateDriver() const {
+        var template = new Scanner( CONFIG_DIRECTORY + "Driver.txt" ).getText();
+
+        var outFile = new System.IO.File( Config.Output + "/Driver.hpp", System.IO.File.AccessMode.WriteOnly );
+        outFile.write( cast<string>( template ) );
+        outFile.close();
+    }
+
     private void generateFunctions() const {
         var entities = mEntityLookup.getFunctions();
         if ( entities.empty() ) {
@@ -75,7 +78,7 @@ public object CodeGenerator {
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Function.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         int count;
         foreach ( Pair<string, EntityType> pair : entities ) {
@@ -87,18 +90,18 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_PARAMETER_USAGE,       generateParameterUsage( entity.Name, entity.Fields, true ) );       // parameter usage list
             template.ReplaceAll( TEMPLATE_RETURN_TYPE,           generateReturnType( entity.Fields ) );                              // return type
 
-            var outFile = new System.IO.File( Config.Output + "/Functions/" + Utils.prettify( entity.Name ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Functions/" + Utils.prettify( entity.Name ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.Name ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.Name ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Functions/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Functions/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -115,7 +118,7 @@ public object CodeGenerator {
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Procedure.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         int count;
         foreach ( Pair<string, EntityType> pair : entities ) {
@@ -126,18 +129,18 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_PARAMETER_DECLARATION, generateParameterDeclaration( entity.Name, entity.Fields ) ); // parameter declaration list
             template.ReplaceAll( TEMPLATE_PARAMETER_USAGE,       generateParameterUsage( entity.Name, entity.Fields ) );       // parameter usage list
 
-            var outFile = new System.IO.File( Config.Output + "/Procedures/" + Utils.prettify( entity.Name ) + ".os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Procedures/" + Utils.prettify( entity.Name ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.Name ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.Name ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + "/Procedures/All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Procedures/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -148,7 +151,7 @@ public object CodeGenerator {
         string result;
 
         foreach ( FieldEntry field : fields ) {
-            if ( !usePrimaryKey && field.RealName == PrimaryKeyName && !field.Extend ) {
+            if ( !usePrimaryKey && field.RealName == PrimaryKeyName ) {
                 continue;
             }
 
@@ -156,7 +159,12 @@ public object CodeGenerator {
                 result += LINEBREAK;
             }
 
-            result += MEMBER_LOAD_PREFIX + field.PrettyName + " = cast<" + field.PrettyType + ">( mysql_get_field_value( result, \"" + field.RealName + "\" ) );";
+            switch ( field.PrettyType ) {
+                case "double":  { result += MEMBER_LOAD_PREFIX + field.PrettyName + " = atol( Driver::mysql_get_field_value( result, row, \"" + field.RealName + "\" ) );"; break; }
+                case "float":   { result += MEMBER_LOAD_PREFIX + field.PrettyName + " = atof( Driver::mysql_get_field_value( result, row, \"" + field.RealName + "\" ) );"; break; }
+                case "int32_t": { result += MEMBER_LOAD_PREFIX + field.PrettyName + " = atoi( Driver::mysql_get_field_value( result, row, \"" + field.RealName + "\" ) );"; break; }
+                case "string":  { result += MEMBER_LOAD_PREFIX + field.PrettyName + " = Driver::mysql_get_field_value( result, row, \"" + field.RealName + "\" );"; break; }
+            }
         }
 
         return result;
@@ -172,7 +180,7 @@ public object CodeGenerator {
         var baseTemplate = new String( new Scanner( CONFIG_DIRECTORY + "Lookup.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         int count;
         foreach ( Pair<string, EntityType> entity : entities ) {
@@ -188,18 +196,18 @@ public object CodeGenerator {
             template.ReplaceAll( TEMPLATE_ENUM_FROM_TOKEN, generateEnumFromToken( Utils.prettify( entity.first ), entity.second ) );        // enum FromToken
             template.ReplaceAll( TEMPLATE_ENUM_TO_TOKEN, generateEnumToToken( Utils.prettify( entity.first ), entity.second ) );            // enum ToToken
 
-            var outFile = new System.IO.File( Config.Output + LOOKUPS_FOLDER + Utils.prettify( entity.first ) + FILE_EXTENSION, System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Lookups/" + Utils.prettify( entity.first ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.first ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.first ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + LOOKUPS_FOLDER + "All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Lookups/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -211,7 +219,7 @@ public object CodeGenerator {
 
             replaceUserTemplates( keyLookupTemplate );
 
-            var outFile = new System.IO.File( Config.Output + "KeyLookup.os", System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/KeyLookup.hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( keyLookupTemplate ) );
             outFile.close();
         }
@@ -233,7 +241,7 @@ public object CodeGenerator {
             result += "    " + t.Token + " = " + t.Id;
         }
 
-        return result + ";";
+        return result;
     }
 
     private string generateEnumFromToken( string type, EntityType entity ) {
@@ -246,7 +254,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "        if ( token == \"" + t.Token + "\" ) return " + type + "." + t.Token + ";";
+            result += "        if ( token == \"" + t.Token + "\" ) return " + type + "::" + t.Token + ";";
         }
 
         return result;
@@ -265,7 +273,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "    public int " + t.Token + " const = " + t.Id;
+            result += "    static constexpr int32_t " + t.Token + " = " + t.Id;
         }
 
         return result + ";";
@@ -281,7 +289,7 @@ public object CodeGenerator {
             }
 
             var t = tokenIt.next();
-            result += "        if ( id == " + type + "." + t.Token + " ) return \"" + t.Token + "\";";
+            result += "        if ( id == " + type + "::" + t.Token + " ) return \"" + t.Token + "\";";
         }
 
         return result;
@@ -305,7 +313,7 @@ public object CodeGenerator {
         string result;
 
         foreach ( FieldEntry field : fields ) {
-            if ( !usePrimaryKey && field.RealName == PrimaryKeyName && !field.Extend ) {
+            if ( !usePrimaryKey && field.RealName == PrimaryKeyName ) {
                continue;
             }
 
@@ -323,7 +331,7 @@ public object CodeGenerator {
         string result;
 
         foreach ( FieldEntry field : fields ) {
-            if ( !usePrimaryKey && field.RealName == PrimaryKeyName && !field.Extend ) {
+            if ( !usePrimaryKey && field.RealName == PrimaryKeyName ) {
                continue;
             }
 
@@ -332,10 +340,10 @@ public object CodeGenerator {
             }
 
             if ( field.RealType == "datetime" || field.RealType == "timestamp" ) {
-                result += "`" + field.RealName + "` = NULLIF('\" + " + field.PrettyName + " + \"', '')";
+                result += "`" + field.RealName + "` = NULLIF('\" << " + field.PrettyName + " << \"', '')";
             }
             else {
-                result += "`" + field.RealName + "` = '\" + " + field.PrettyName + " + \"'";
+                result += "`" + field.RealName + "` = '\" << " + field.PrettyName + " << \"'";
             }
         }
 
@@ -346,7 +354,7 @@ public object CodeGenerator {
         string result;
 
         foreach ( FieldEntry field : fields ) {
-            if ( !usePrimaryKey && field.RealName == PrimaryKeyName && !field.Extend ) {
+            if ( !usePrimaryKey && field.RealName == PrimaryKeyName ) {
                continue;
             }
 
@@ -355,10 +363,10 @@ public object CodeGenerator {
             }
 
             if ( field.RealType == "datetime" || field.RealType == "timestamp" ) {
-                result += "NULLIF('\" + " + field.PrettyName + " + \"', '')";
+                result += "NULLIF('\" << " + field.PrettyName + " << \"', '')";
             }
             else {
-                result += "'\" + " + field.PrettyName + " + \"'";
+                result += "'\" << " + field.PrettyName + " << \"'";
             }
         }
 
@@ -427,7 +435,7 @@ public object CodeGenerator {
         var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "table_without_id.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         var idField = new FieldEntry( PrimaryKeyName, "Id", "int", "int" );
 
@@ -445,18 +453,18 @@ public object CodeGenerator {
             replaceSpecialTemplates( template, entity.second );
             replaceUserTemplates( template );
 
-            var outFile = new System.IO.File( Config.Output + TABLES_FOLDER + Utils.prettify( entity.first ) + FILE_EXTENSION, System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Tables/" + Utils.prettify( entity.first ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.first ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.first ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + TABLES_FOLDER + "All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Tables/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
@@ -477,7 +485,7 @@ public object CodeGenerator {
         var baseTemplateWithoutId = new String( new Scanner( CONFIG_DIRECTORY + "view_without_id.txt" ).getText() );
 
         var libraryImports = LINEBREAK;
-        libraryImports += "// import all library files" + LINEBREAK;
+        libraryImports += "// include all library files" + LINEBREAK;
 
         var idField = new FieldEntry( PrimaryKeyName, "Id", "int", "int" );
 
@@ -495,57 +503,28 @@ public object CodeGenerator {
             replaceSpecialTemplates( template, entity.second );
             replaceUserTemplates( template );
 
-            var outFile = new System.IO.File( Config.Output + VIEWS_FOLDER + Utils.prettify( entity.first ) + FILE_EXTENSION, System.IO.File.AccessMode.WriteOnly );
+            var outFile = new System.IO.File( Config.Output + "/Views/" + Utils.prettify( entity.first ) + ".hpp", System.IO.File.AccessMode.WriteOnly );
             outFile.write( cast<string>( template ) );
             outFile.close();
 
-            libraryImports += "import " + Utils.prettify( entity.first ) + ";" + LINEBREAK;
+            libraryImports += "#include \"" + Utils.prettify( entity.first ) + ".hpp\"" + LINEBREAK;
 
             count++;
         }
 
         libraryImports += LINEBREAK;
 
-        var allFile = new System.IO.File( Config.Output + VIEWS_FOLDER + "All.os", System.IO.File.AccessMode.WriteOnly );
+        var allFile = new System.IO.File( Config.Output + "/Views/All.hpp", System.IO.File.AccessMode.WriteOnly );
         allFile.write( libraryImports );
         allFile.close();
 
         print( "" + count + " view objects generated." );
     }
 
-    /*
-    private void prepareExtensions() modify {
-        // loop over all tables and views and check if there are planned extensions for them
-
-        var datatypeMapper = new DatatypeMapper();
-
-        var extensions = Extensions.Extensions;
-        if ( extensions.isMember( "Tables" ) ) {
-            var tables const = JsonObject extensions[ "Tables" ];
-
-            var entities = mEntityLookup.getTables();
-            foreach ( Pair<string, EntityType> entity : entities ) {
-                if( tables.isMember( entity.first ) ) {
-                    foreach ( JsonValue value : JsonArray tables[ entity.first ] ) {
-                        print( value.toString() );
-
-                        print( entity.second.Fields.size() );
-                        entity.second.Fields.push_back( new FieldEntry(
-                            "value",
-                            Utils.prettify( "value" ),
-                            value.asString(),
-                            datatypeMapper.lookupType( value.asString() )
-                        ) );
-                        print( entity.second.Fields.size() );
-                    }
-                }
-            }
-        }
-    }
-    */
-
     private void prepareFolders() modify {
+        system( "mkdir -p " + Config.Output + "/Functions" );
         system( "mkdir -p " + Config.Output + "/Lookups" );
+        system( "mkdir -p " + Config.Output + "/Procedures" );
         system( "mkdir -p " + Config.Output + "/Tables" );
         system( "mkdir -p " + Config.Output + "/Views" );
     }

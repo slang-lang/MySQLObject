@@ -38,7 +38,6 @@ public object #TABLE_PREFIX##ENTITY_NAME_PRETTY##TABLE_POSTFIX# {
         }
     }
 
-
     public void insertOrUpdate() modify throws {
         var query = "INSERT INTO #ENTITY_NAME# ( #MEMBER_LIST# ) VALUES ( #MEMBER_VALUES# ) ON DUPLICATE KEY UPDATE #MEMBER_PAIR_WITHOUT_PRIMARY#";
 

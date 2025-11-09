@@ -3,3 +3,17 @@ public enum #ENTITY_NAME_PRETTY# {
 #ENUM_DECLARATION#
 }
 
+public object #ENTITY_NAME_PRETTY#Converter {
+    public static #ENTITY_NAME_PRETTY# FromToken( string token ) throws {
+#ENUM_FROM_TOKEN#
+
+        throw "invalid token '" + token + "'";
+    }
+
+    public static string ToToken( #ENTITY_NAME_PRETTY# id ) throws {
+#ENUM_TO_TOKEN#
+
+        throw "invalid id " + cast<int>( id );
+    }
+}
+

@@ -1,0 +1,14 @@
+bigint:     int32_t
+datetime:   string
+decimal:    double
+double:     double
+float:      double
+int:        int32_t
+mediumtext: string
+smallint:   int32_t
+longtext:   string
+text:       string
+tinytext:   string
+tinyint:    int32_t
+timestamp:  string
+varchar:    string
